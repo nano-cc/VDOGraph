@@ -45,6 +45,7 @@ function createSidebarState() {
     visible: false,
     type: 'ai',
     mode: 'compose',
+    agentTab: 'qa',  // Video Agent 面板默认 tab：qa=视频问答（KG 单视频）/ agent=目标分析
     title: '',
     content: '',
     error: '',
@@ -254,6 +255,18 @@ export function useAnalysisWorkspace({
     sidebar.value.mediaId = id
     sidebar.value.statusMessage = '提取任务已提交，正在识别语音'
     try {
+      // 优先复用 KG analyze 产物（Neo4j 片段转写拼接，零 ASR 成本秒级返回）
+      const kgRes = await apiRequest(`/analysis/kg-transcript?id=${id}`)
+      if (kgRes.ok) {
+        const kgData = await kgRes.json()
+        if (isCurrentWorkspace(id, 'text')) {
+          sidebar.value.content = kgData.transcript || ''
+          sidebar.value.statusMessage = ''
+          sidebar.value.loading = false
+        }
+        return
+      }
+      // 404 = 尚未建图，回退老 ASR 转写流程
       const current = await apiRequest(`/analysis/transcription-status?id=${id}`)
       if (!current.ok) throw new Error(await current.text())
       const currentStatus = await current.json()

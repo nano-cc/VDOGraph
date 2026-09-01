@@ -40,15 +40,18 @@ public class MediaProcessingController {
     private final MediaService mediaService;
     private final TranscriptionTaskService transcriptionTaskService;
     private final TaskEventService taskEventService;
+    private final com.example.server.client.AiServiceClient aiServiceClient;
 
     public MediaProcessingController(AudioExportService audioExportService,
                                      MediaService mediaService,
                                      TranscriptionTaskService transcriptionTaskService,
-                                     TaskEventService taskEventService) {
+                                     TaskEventService taskEventService,
+                                     com.example.server.client.AiServiceClient aiServiceClient) {
         this.audioExportService = audioExportService;
         this.mediaService = mediaService;
         this.transcriptionTaskService = transcriptionTaskService;
         this.taskEventService = taskEventService;
+        this.aiServiceClient = aiServiceClient;
     }
 
     @PostMapping("/transcribe")
@@ -69,6 +72,22 @@ public class MediaProcessingController {
         }
         // 异步受理：202 Accepted，结果由 transcription-status / SSE 获取。
         return ResponseEntity.accepted().body(Result.ok());
+    }
+
+    /**
+     * 视频全量文字（优先复用 KG analyze 产物：Neo4j 片段转写拼接，零 ASR 成本）
+     * 404 表示尚未建图，前端回退老 ASR 转写流程
+     */
+    @GetMapping("/kg-transcript")
+    public Result<java.util.Map<String, Object>> kgTranscript(
+            @RequestParam Long id,
+            @RequestAttribute(AuthService.REQUEST_USER_ID) Long userId) {
+        mediaService.requireOwnedMedia(id, userId);
+        java.util.Map<String, Object> transcript = aiServiceClient.kgTranscript(id);
+        if (transcript == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND, "该视频尚未完成图谱解析");
+        }
+        return Result.ok(transcript);
     }
 
     @GetMapping("/transcription-status")

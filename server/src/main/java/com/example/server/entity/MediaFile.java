@@ -20,9 +20,15 @@ public class MediaFile {
     private String filePath;
     private String contentHash;
 
+    /** 秒传指纹（xxHash3-128 全量，客户端上传前计算） */
+    private String quickHash;
+
     private String aiSummary;
     private String transcriptText;
     private String coverUrl;
+
+    /** 视频时长（毫秒，complete 时 ffprobe 落库） */
+    private Long durationMs;
 
     private LocalDateTime uploadTime;
 }

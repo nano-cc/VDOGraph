@@ -5,6 +5,7 @@ import com.example.server.entity.MediaFile;
 import com.example.server.dto.VideoContext;
 import com.example.server.mapper.MediaFileMapper;
 import com.example.server.utils.MinioUtils;
+import com.example.server.utils.QuickHashUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -16,11 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -63,16 +60,15 @@ public class MediaService {
         this.videoContextService = videoContextService;
     }
 
-    public String calculateMd5(MultipartFile file) throws IOException {
+    /** quickHash（XXH3-128）统一计算：与前端 hash-wasm createXXHash128(0) 输出一致 */
+    public String calculateQuickHash(MultipartFile file) throws IOException {
         try (InputStream inputStream = file.getInputStream()) {
-            return calculateMd5(inputStream);
+            return QuickHashUtils.xxh3Hex(inputStream);
         }
     }
 
-    public String calculateMd5(File file) throws IOException {
-        try (InputStream inputStream = Files.newInputStream(file.toPath())) {
-            return calculateMd5(inputStream);
-        }
+    public String calculateQuickHash(File file) throws IOException {
+        return QuickHashUtils.xxh3Hex(file);
     }
 
     public void rememberContentHash(Long mediaId, String md5) {
@@ -84,17 +80,17 @@ public class MediaService {
         }
     }
 
-    public MediaFile saveUploadedMedia(String filename, String fileUrl, Long userId, String md5) {
+    public MediaFile saveUploadedMedia(String filename, String fileUrl, Long userId, String quickHash) {
         MediaFile mediaFile = new MediaFile();
         mediaFile.setFilename(normalizeVideoFilename(filename));
         mediaFile.setFilePath(fileUrl);
         mediaFile.setStatus("COMPLETED");
         mediaFile.setUploadTime(LocalDateTime.now());
         mediaFile.setUserId(userId);
-        mediaFile.setContentHash(md5);
+        mediaFile.setQuickHash(quickHash);
         try {
             mediaFileMapper.insert(mediaFile);
-            rememberContentHash(mediaFile.getId(), md5);
+            rememberContentHash(mediaFile.getId(), quickHash);
             invalidateUserList(userId);
             return mediaFile;
         } catch (RuntimeException e) {
@@ -116,7 +112,7 @@ public class MediaService {
 
         QueryWrapper<MediaFile> query = new QueryWrapper<>();
         List<MediaFile> mediaFiles = mediaFileMapper.selectList(
-                query.select("id", "filename", "status", "cover_url", "upload_time")
+                query.select("id", "filename", "status", "cover_url", "duration_ms", "upload_time")
                         .eq("user_id", userId)
                         .orderByDesc("id"));
         try {
@@ -137,7 +133,10 @@ public class MediaService {
         }
 
         MediaFile mediaFile = mediaFileMapper.selectById(mediaId);
-        String persisted = mediaFile == null ? null : mediaFile.getContentHash();
+        // 新数据读 quick_hash（XXH3-128），历史数据兜底 content_hash（旧 MD5）
+        String persisted = mediaFile == null ? null
+                : (mediaFile.getQuickHash() != null && !mediaFile.getQuickHash().isBlank()
+                        ? mediaFile.getQuickHash() : mediaFile.getContentHash());
         rememberContentHash(mediaId, persisted);
         return persisted;
     }
@@ -191,6 +190,83 @@ public class MediaService {
         }
     }
 
+    /**
+     * 按 quickHash（XXH3-128）查重（URL 导入下载完成后的"秒传"判定，排除占位记录自身）。
+     * 与手动上传前端算的 quickHash 同算法同列，跨路径判重有效。
+     */
+    public MediaFile findByQuickHash(Long userId, String quickHash, Long excludeId) {
+        if (quickHash == null || quickHash.isBlank()) return null;
+        QueryWrapper<MediaFile> query = new QueryWrapper<>();
+        query.eq("user_id", userId)
+                .eq("quick_hash", quickHash)
+                .eq("status", "COMPLETED")
+                .ne(excludeId != null, "id", excludeId)
+                .orderByAsc("id")
+                .last("LIMIT 1");
+        return mediaFileMapper.selectOne(query);
+    }
+
+    /**
+     * URL 导入占位记录（PROCESSING，消费者下载完成后回填 filePath 等最终信息）
+     */
+    public MediaFile createImportPlaceholder(String filename, Long userId) {
+        MediaFile mediaFile = new MediaFile();
+        mediaFile.setFilename(normalizeVideoFilename(filename));
+        mediaFile.setFilePath("");
+        mediaFile.setStatus("PROCESSING");
+        mediaFile.setUploadTime(LocalDateTime.now());
+        mediaFile.setUserId(userId);
+        mediaFileMapper.insert(mediaFile);
+        invalidateUserList(userId);
+        return mediaFile;
+    }
+
+    public MediaFile findById(Long mediaId) {
+        return mediaId == null ? null : mediaFileMapper.selectById(mediaId);
+    }
+
+    /**
+     * 删除占位记录（内容判重命中时：占位没产生任何外部资源，直接移除）
+     */
+    public void deletePlaceholder(MediaFile mediaFile) {
+        mediaFileMapper.deleteById(mediaFile.getId());
+        invalidateUserList(mediaFile.getUserId());
+    }
+
+    /**
+     * URL 导入完成：占位记录落最终信息（MinIO 地址/quickHash/真实文件名/完成态）
+     */
+    public void completeUrlImport(MediaFile mediaFile, String fileUrl, String quickHash, String filename) {
+        mediaFile.setFilePath(fileUrl);
+        mediaFile.setQuickHash(quickHash);
+        mediaFile.setFilename(normalizeVideoFilename(filename));
+        mediaFile.setStatus("COMPLETED");
+        mediaFileMapper.updateById(mediaFile);
+        rememberContentHash(mediaFile.getId(), quickHash);
+        invalidateUserList(mediaFile.getUserId());
+    }
+
+    /**
+     * URL 导入失败：占位记录置失败态（展示给用户后可手动删除重试）
+     */
+    public void failUrlImport(MediaFile mediaFile) {
+        mediaFile.setStatus("FAILED");
+        mediaFileMapper.updateById(mediaFile);
+        invalidateUserList(mediaFile.getUserId());
+    }
+
+    /**
+     * 清理导入失败时已上传的 MinIO 对象（尽力而为，不阻断主流程）
+     */
+    public void removeObjectQuietly(String fileUrl) {
+        if (fileUrl == null) return;
+        try {
+            minioUtils.removeFile(fileUrl);
+        } catch (RuntimeException e) {
+            log.warn("url_import_object_cleanup_failed path={}", fileUrl, e);
+        }
+    }
+
     public String readableSource(String source) {
         return minioUtils.readableSource(source);
     }
@@ -218,24 +294,6 @@ public class MediaService {
             throw new SecurityException("无权访问该文件");
         }
         return mediaFile;
-    }
-
-    private String calculateMd5(InputStream inputStream) throws IOException {
-        MessageDigest digest = md5Digest();
-        byte[] buffer = new byte[8192];
-        int read;
-        while ((read = inputStream.read(buffer)) != -1) {
-            digest.update(buffer, 0, read);
-        }
-        return HexFormat.of().formatHex(digest.digest());
-    }
-
-    private MessageDigest md5Digest() {
-        try {
-            return MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("MD5 is not available", e);
-        }
     }
 
     private String userListKey(Long userId) {

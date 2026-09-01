@@ -21,6 +21,9 @@
 
           <div v-else class="user-profile">
             <span class="user-name">:: {{ currentUser.nickname }} ::</span>
+            <button class="settings-btn" @click="openSettings" title="模型设置" aria-label="模型设置">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
             <button class="logout-btn" @click="logout" title="退出登录" aria-label="退出登录">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             </button>
@@ -145,6 +148,127 @@
         </transition>
       </section>
 
+      <section class="kg-section">
+        <div class="kg-card">
+          <div class="kg-header">
+            <h3>知识图谱问答</h3>
+            <p class="kg-sub">基于已解析视频构建的知识网络，答案可溯源到视频片段</p>
+          </div>
+          <div class="kg-input-row">
+            <input
+                v-model="kgQuestion"
+                type="text"
+                class="kg-input"
+                placeholder="问点什么，如：牛肉价格为什么上涨？"
+                aria-label="知识图谱问答输入"
+                :disabled="kgLoading"
+                @keyup.enter="askKg"
+            />
+            <select v-model="kgMode" class="kg-mode" :disabled="kgLoading" aria-label="问答模式">
+              <option value="auto">智能 Agent</option>
+              <option value="local">事实检索</option>
+              <option value="global">主题概括</option>
+            </select>
+            <button class="kg-ask-btn" :disabled="kgLoading || !kgQuestion.trim()" @click="askKg">
+              {{ kgLoading ? '思考中…' : '提问' }}
+            </button>
+          </div>
+          <p v-if="kgError" class="kg-error" role="alert">{{ kgError }}</p>
+          <div v-if="kgEvents.length" class="kg-thinking">
+            <div class="kg-thinking-title">Agent 思考过程</div>
+            <div v-for="(ev, i) in kgEvents" :key="i" class="kg-event" :class="ev.type">
+              <template v-if="ev.type === 'tool_start'">
+                <span class="kg-event-icon">🔍</span>
+                <span class="kg-event-name">{{ ev.tool }}</span>
+                <span class="kg-event-query">{{ ev.query }}</span>
+              </template>
+              <template v-else-if="ev.type === 'tool_end'">
+                <div class="kg-event-result">{{ ev.result_preview }}</div>
+              </template>
+            </div>
+          </div>
+          <div v-if="kgAnswer" class="kg-answer markdown-body" v-html="kgAnswerHtml"></div>
+          <div v-if="kgToolCalls.length" class="kg-tools">
+            <span class="kg-tools-label">Agent 检索路径：</span>{{ kgToolCalls.join(' → ') }}
+          </div>
+          <div v-if="kgCitations.length" class="kg-citations">
+            <div class="kg-cite-title">溯源 · {{ kgCitations.length }} 个来源片段</div>
+            <div class="kg-cite-list">
+              <div v-for="c in kgCitations" :key="c.segment_id" class="kg-cite-item" @click="playCitation(c)" title="点击播放该片段">
+                <img
+                    v-if="c.frame_urls && c.frame_urls.length"
+                    :src="c.frame_urls[0]"
+                    class="kg-cite-frame"
+                    alt="片段证据帧"
+                    loading="lazy"
+                />
+                <div class="kg-cite-body">
+                  <div class="kg-cite-time">媒体 {{ c.media_id }} · {{ formatMsTimestamp(c.start_ms) }} - {{ formatMsTimestamp(c.end_ms) }}</div>
+                  <div class="kg-cite-text">{{ c.transcript_excerpt }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div v-if="kgVideo.visible" class="kg-video-backdrop" @click="kgVideo.visible = false">
+        <div class="kg-video-modal" @click.stop>
+          <div class="kg-video-header">
+            <span>{{ kgVideo.title }}</span>
+            <button class="kg-video-close" @click="kgVideo.visible = false" aria-label="关闭">✕</button>
+          </div>
+          <video
+              :src="kgVideo.url"
+              class="kg-video-player"
+              controls
+              autoplay
+              @loadedmetadata="onKgVideoLoaded"
+          ></video>
+        </div>
+      </div>
+
+      <div v-if="settingsVisible" class="kg-video-backdrop" @click="settingsVisible = false">
+        <div class="settings-modal" @click.stop>
+          <div class="kg-video-header">
+            <span>模型供应商设置（OpenAI 兼容端点，保存后 30 秒内生效）</span>
+            <button class="kg-video-close" @click="settingsVisible = false" aria-label="关闭">✕</button>
+          </div>
+          <div v-if="settingsLoading" class="settings-hint">加载中…</div>
+          <template v-else>
+            <div v-for="kind in settingsKinds" :key="kind.key" class="settings-section">
+              <div class="settings-section-title">{{ kind.label }}</div>
+              <div class="settings-field">
+                <label>Base URL</label>
+                <input v-model="settingsForm[kind.key].base_url" type="text" placeholder="https://api.siliconflow.cn/v1" />
+              </div>
+              <div class="settings-field">
+                <label>API Key</label>
+                <input v-model="settingsForm[kind.key].api_key" type="text" placeholder="sk-..." />
+              </div>
+              <div class="settings-field">
+                <label>模型</label>
+                <input v-model="settingsForm[kind.key].model" type="text" :placeholder="kind.placeholder" />
+              </div>
+              <div class="settings-actions">
+                <button class="settings-test-btn" :disabled="settingsTesting === kind.key" @click="testModelConfig(kind.key)">
+                  {{ settingsTesting === kind.key ? '测试中…' : '测试连接' }}
+                </button>
+                <span v-if="settingsTestResult[kind.key]" class="settings-test-result" :class="settingsTestResult[kind.key].ok ? 'ok' : 'fail'">
+                  {{ settingsTestResult[kind.key].message }}
+                </span>
+              </div>
+            </div>
+            <div class="settings-footer">
+              <p v-if="settingsMessage" class="settings-message" :class="{ error: settingsMessageError }">{{ settingsMessage }}</p>
+              <button class="kg-ask-btn" :disabled="settingsSaving" @click="saveSettings">
+                {{ settingsSaving ? '保存中…' : '保存配置' }}
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
       <section v-if="list.length > 0" class="workspace-section">
         <div class="section-header">
           <div class="library-title">
@@ -155,6 +279,12 @@
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <input v-model="searchQuery" type="search" placeholder="搜索视频名称" aria-label="搜索视频名称" />
           </label>
+          <select v-model="sortBy" class="library-sort" aria-label="排序方式">
+            <option value="time_desc">最新上传</option>
+            <option value="time_asc">最早上传</option>
+            <option value="duration_desc">时长从长到短</option>
+            <option value="duration_asc">时长从短到长</option>
+          </select>
         </div>
         <div class="card-grid">
           <div v-for="item in visibleList" :key="item.id" class="project-card">
@@ -170,14 +300,19 @@
                 <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M8 6V4h8v2"></path>
               </svg>
             </button>
+            <div class="card-cover" v-if="coverUrlOf(item)">
+              <img :src="coverUrlOf(item)" :alt="item.filename" loading="lazy" />
+              <span v-if="item.durationMs" class="cover-duration">{{ formatDuration(item.durationMs) }}</span>
+            </div>
             <div class="card-meta">
-              <div class="meta-icon">
+              <div class="meta-icon" v-if="!coverUrlOf(item)">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
               </div>
               <div class="meta-info">
                 <div class="filename-mask" :title="item.filename">{{ item.filename }}</div>
                 <div class="meta-tags">
                   <span class="time-tag">{{ formatTime(item.uploadTime) }}</span>
+                  <span v-if="item.durationMs && !coverUrlOf(item)" class="time-tag">{{ formatDuration(item.durationMs) }}</span>
                   <span
                       class="status-indicator"
                       :class="cardStatusClass(item)"
@@ -185,8 +320,42 @@
                   >
                     {{ cardStatusLabel(item) }}
                   </span>
+                  <span
+                      v-if="kgStatusOf(item.id)"
+                      class="status-indicator kg-status clickable"
+                      :class="kgStatusOf(item.id).toLowerCase()"
+                      :title="'点击查看构建生命周期'"
+                      @click.stop="toggleLifecycle(item)"
+                  >
+                    {{ kgStatusOf(item.id) === 'RUNNING' && kgBuildStatus[item.id]?.progress
+                        ? `图谱构建中 ${kgBuildStatus[item.id].progress}`
+                        : { RUNNING: '图谱构建中', SUCCESS: '图谱就绪', FAILED: '图谱构建失败' }[kgStatusOf(item.id)] }}
+                  </span>
                 </div>
               </div>
+            </div>
+
+            <div v-if="lifecycleOpenId === item.id" class="lifecycle-panel" @click.stop>
+              <template v-if="lifecycleOf(item).failed">
+                <div class="lifecycle-step failed">✕ 图谱构建失败：{{ kgBuildStatus[item.id]?.message || '未知错误' }}</div>
+              </template>
+              <template v-else>
+                <div
+                  v-for="(step, idx) in lifecycleOf(item).steps"
+                  :key="step.key"
+                  class="lifecycle-step"
+                  :class="{ done: idx < lifecycleOf(item).currentIdx, active: idx === lifecycleOf(item).currentIdx }"
+                >
+                  <span class="step-dot"></span>
+                  <span class="step-label">{{ step.label }}</span>
+                  <span v-if="idx === lifecycleOf(item).currentIdx && kgBuildStatus[item.id]?.progress" class="step-progress">
+                    {{ kgBuildStatus[item.id].progress }}
+                  </span>
+                  <span v-if="idx === lifecycleOf(item).currentIdx && kgBuildStatus[item.id]?.message" class="step-msg">
+                    {{ kgBuildStatus[item.id].message }}
+                  </span>
+                </div>
+              </template>
             </div>
 
             <div class="action-dock">
@@ -261,7 +430,71 @@
           <button class="close-btn" @click="closeSidebar" aria-label="关闭分析面板">×</button>
         </div>
         <div ref="sidebarBody" class="sidebar-body">
-          <div v-if="sidebar.type === 'ai'" class="video-evidence">
+          <div v-if="sidebar.type === 'ai'" class="agent-tabs" role="tablist">
+            <button
+                :class="{ active: (sidebar.agentTab || 'qa') === 'qa' }"
+                role="tab"
+                @click="sidebar.agentTab = 'qa'"
+            >视频问答</button>
+            <button
+                :class="{ active: sidebar.agentTab === 'agent' }"
+                role="tab"
+                @click="sidebar.agentTab = 'agent'"
+            >目标分析</button>
+          </div>
+
+          <div v-if="sidebar.type === 'ai' && (sidebar.agentTab || 'qa') === 'qa'" class="video-qa-panel">
+            <p class="agent-caption">只基于当前视频的知识图谱内容回答，答案可溯源到片段</p>
+            <div class="kg-input-row">
+              <input
+                  v-model="videoQa.question"
+                  class="kg-input"
+                  placeholder="针对这个视频提问，例如：这个视频讲了什么？"
+                  :disabled="videoQa.loading"
+                  @keyup.enter="askVideoKg"
+              />
+              <button class="kg-ask-btn" :disabled="videoQa.loading || !videoQa.question.trim()" @click="askVideoKg">
+                {{ videoQa.loading ? '思考中' : '提问' }}
+              </button>
+            </div>
+            <p v-if="videoQa.error" class="kg-error" role="alert">{{ videoQa.error }}</p>
+            <div v-if="videoQa.events.length" class="kg-thinking">
+              <div class="kg-thinking-title">Agent 思考过程</div>
+              <div v-for="(ev, i) in videoQa.events" :key="i" class="kg-event" :class="ev.type">
+                <template v-if="ev.type === 'tool_start'">
+                  <span class="kg-event-icon">🔍</span>
+                  <span class="kg-event-name">{{ ev.tool }}</span>
+                  <span class="kg-event-query">{{ ev.query }}</span>
+                </template>
+                <template v-else-if="ev.type === 'tool_end'">
+                  <span class="kg-event-icon">✓</span>
+                  <span class="kg-event-name">{{ ev.tool }}</span>
+                  <span class="kg-event-query">{{ ev.preview }}</span>
+                </template>
+              </div>
+            </div>
+            <div v-if="videoQa.answer" class="kg-answer markdown-body" v-html="videoQaAnswerHtml"></div>
+            <div v-if="videoQa.citations.length" class="kg-citations">
+              <div class="kg-cite-title">溯源 · {{ videoQa.citations.length }} 个来源片段</div>
+              <div class="kg-cite-list">
+                <div v-for="c in videoQa.citations" :key="c.segment_id" class="kg-cite-item" @click="playCitation(c)" title="点击播放该片段">
+                  <img
+                      v-if="c.frame_urls && c.frame_urls.length"
+                      :src="c.frame_urls[0]"
+                      class="kg-cite-frame"
+                      alt="片段证据帧"
+                      loading="lazy"
+                  />
+                  <div class="kg-cite-body">
+                    <div class="kg-cite-time">{{ formatMsTimestamp(c.start_ms) }} - {{ formatMsTimestamp(c.end_ms) }}</div>
+                    <div class="kg-cite-text">{{ c.transcript_excerpt }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="sidebar.type === 'ai' && sidebar.agentTab === 'agent'" class="video-evidence">
             <video
                 v-if="sidebar.playbackUrl"
                 ref="videoPlayer"
@@ -278,7 +511,7 @@
             </div>
             <p v-if="sidebar.playbackUrl">点击分析结果中的时间戳，可跳转到对应画面</p>
           </div>
-          <div v-if="sidebar.type === 'ai' && sidebar.mode === 'compose'" class="agent-composer">
+          <div v-if="sidebar.type === 'ai' && sidebar.agentTab === 'agent' && sidebar.mode === 'compose'" class="agent-composer">
             <p class="agent-caption">选择分析模式（决定产物形态）</p>
             <div class="goal-presets agent-mode-row">
               <button
@@ -317,7 +550,7 @@
             </button>
           </div>
 
-          <div v-else-if="sidebar.loading" class="agent-running">
+          <div v-else-if="sidebar.loading && (sidebar.type !== 'ai' || sidebar.agentTab === 'agent')" class="agent-running">
             <div class="loading-state">
               <div class="quantum-loader small"></div>
               <p aria-live="polite">{{ loadingHeadline }}</p>
@@ -336,7 +569,7 @@
             </div>
           </div>
 
-          <div v-else>
+          <div v-else-if="sidebar.type !== 'ai' || sidebar.agentTab === 'agent'">
             <div v-if="sidebar.type === 'ai'">
               <div class="result-actions">
                 <button type="button" @click="startNewAnalysis">更换产物</button>
@@ -501,9 +734,11 @@ import {
   uploadVideoInChunks,
   validateVideoFile
 } from './chunkUpload'
+import { uploadVideoS3 } from './s3Upload'
 import { DEMO_ITEM } from './demoData'
 import { createTaskStreams } from './taskEvents'
 import { useAnalysisWorkspace } from './useAnalysisWorkspace'
+import { renderMarkdown } from './markdown'
 
 // --- 变量定义 ---
 const DEMO_MODE = new URLSearchParams(window.location.search).has('demo')
@@ -527,14 +762,317 @@ const deletingId = ref(null)
 const isOffline = ref(typeof navigator !== 'undefined' && navigator.onLine === false)
 const activeTasks = ref([])
 const elapsedSeconds = ref(0)
+const sortBy = ref('time_desc')  // time_desc / time_asc / duration_desc / duration_asc
 const visibleList = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase()
-  if (!query) return list.value
-  return list.value.filter(item => item.filename?.toLocaleLowerCase().includes(query))
+  let items = list.value
+  if (query) {
+    items = items.filter(item => item.filename?.toLocaleLowerCase().includes(query))
+  }
+  const sorted = [...items]
+  switch (sortBy.value) {
+    case 'time_asc':
+      sorted.sort((a, b) => new Date(a.uploadTime) - new Date(b.uploadTime)); break
+    case 'duration_desc':
+      sorted.sort((a, b) => (b.durationMs || 0) - (a.durationMs || 0)); break
+    case 'duration_asc':
+      sorted.sort((a, b) => (a.durationMs || 0) - (b.durationMs || 0)); break
+    default:
+      sorted.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime))
+  }
+  return sorted
 })
+
+const formatDuration = (ms) => {
+  if (!ms) return ''
+  const total = Math.round(ms / 1000)
+  const m = Math.floor(total / 60)
+  const sec = String(total % 60).padStart(2, '0')
+  return m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}:${sec}` : `${m}:${sec}`
+}
+
+const coverUrlOf = (item) => {
+  if (!item.coverUrl) return null
+  const token = localStorage.getItem('authToken')
+  return `/media/cover?id=${item.id}&token=${encodeURIComponent(token || '')}`
+}
+
+// --- 生命周期 stepper ---
+const lifecycleOpenId = ref(null)
+const LIFECYCLE_STEPS = [
+  { key: 'UPLOADED', label: '上传完成' },
+  { key: 'QUEUED', label: '排队中' },
+  { key: 'ANALYZING', label: '解析中' },
+  { key: 'COMMITTING', label: '图谱写入' },
+  { key: 'SUCCESS', label: '已就绪' },
+]
+const lifecycleOf = (item) => {
+  const kg = kgBuildStatus.value[item.id]
+  const phase = kg?.phase
+  const status = kg?.status
+  let currentIdx = 0
+  if (status === 'SUCCESS') currentIdx = LIFECYCLE_STEPS.length  // 5：全部 done，无 active 步（不再闪 pulse）
+  else if (status === 'FAILED') currentIdx = -1  // 失败特殊处理
+  else if (phase === 'COMMITTING' || phase === 'ANALYZED') currentIdx = 3
+  else if (phase === 'ANALYZING') currentIdx = 2
+  else if (phase === 'QUEUED' || status === 'RUNNING') currentIdx = 1
+  return { steps: LIFECYCLE_STEPS, currentIdx, failed: status === 'FAILED', kg }
+}
+const toggleLifecycle = (item) => {
+  lifecycleOpenId.value = lifecycleOpenId.value === item.id ? null : item.id
+}
 const isDragOver = ref(false)
 const currentUser = ref(null)
 const showAuthModal = ref(false)
+
+// --- 知识图谱问答 ---
+const kgQuestion = ref('')
+const kgMode = ref('auto')
+const kgLoading = ref(false)
+const kgAnswer = ref('')
+const kgCitations = ref([])
+const kgToolCalls = ref([])
+const kgError = ref('')
+const kgEvents = ref([])  // agent 思考过程事件流
+const kgVideo = ref({ visible: false, url: '', startMs: 0, title: '' })
+const kgAnswerHtml = computed(() => renderMarkdown(kgAnswer.value))
+
+function formatMsTimestamp(ms) {
+  const totalSeconds = Math.floor((ms || 0) / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+async function askKg() {
+  const question = kgQuestion.value.trim()
+  if (!question || kgLoading.value) return
+  if (!currentUser.value) {
+    openAuthModal()
+    return
+  }
+  kgLoading.value = true
+  kgError.value = ''
+  kgAnswer.value = ''
+  kgCitations.value = []
+  kgToolCalls.value = []
+  kgEvents.value = []
+  try {
+    if (kgMode.value === 'auto') {
+      await askKgStream(question)
+    } else {
+      const res = await apiRequest(
+        `/kg/ask?question=${encodeURIComponent(question)}&mode=${encodeURIComponent(kgMode.value)}`,
+        { method: 'POST' }
+      )
+      if (!res.ok) throw new Error(await res.text() || '问答请求失败')
+      const data = await res.json()
+      kgAnswer.value = data.answer || ''
+      kgCitations.value = data.citations || []
+      kgToolCalls.value = data.tool_calls || data.toolCalls || []
+    }
+  } catch (error) {
+    kgError.value = error.message || '问答请求失败'
+  } finally {
+    kgLoading.value = false
+  }
+}
+
+/** 流式问答：逐条接收 agent 思考过程事件 */
+async function askKgStream(question) {
+  const token = localStorage.getItem('authToken')
+  const res = await fetch(
+    `/kg/ask/stream?question=${encodeURIComponent(question)}`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
+  )
+  if (!res.ok) throw new Error(`问答请求失败 (${res.status})`)
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop()  // 最后半行留到下次
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      let event
+      try { event = JSON.parse(line.slice(6)) } catch { continue }
+      if (event.type === 'final') {
+        kgAnswer.value = event.answer || ''
+        kgCitations.value = event.citations || []
+        kgToolCalls.value = event.tool_calls || []
+      } else if (event.type === 'error') {
+        kgError.value = event.message || '问答失败'
+      } else {
+        kgEvents.value.push(event)
+      }
+    }
+  }
+}
+
+/** 点击溯源卡片：播放对应视频片段 */
+async function playCitation(c) {
+  try {
+    const res = await apiRequest(`/media/playback?id=${c.media_id}`)
+    if (!res.ok) throw new Error(await res.text() || '无法加载视频')
+    const url = await res.json()
+    kgVideo.value = {
+      visible: true,
+      url,
+      startMs: c.start_ms || 0,
+      title: `媒体 ${c.media_id} · 从 ${formatMsTimestamp(c.start_ms)} 开始播放`
+    }
+  } catch (error) {
+    kgError.value = error.message || '无法加载视频'
+  }
+}
+
+// --- Video Agent · 视频问答（单视频限定的 KG 问答） ---
+const videoQa = ref({ question: '', loading: false, events: [], answer: '', citations: [], error: '' })
+const videoQaAnswerHtml = computed(() => renderMarkdown(videoQa.value.answer))
+
+/** 单视频问答（流式，mediaId 限定检索范围） */
+async function askVideoKg() {
+  const question = videoQa.value.question.trim()
+  if (!question || videoQa.value.loading || !sidebar.value.mediaId) return
+  videoQa.value.loading = true
+  videoQa.value.error = ''
+  videoQa.value.answer = ''
+  videoQa.value.citations = []
+  videoQa.value.events = []
+  try {
+    const token = localStorage.getItem('authToken')
+    const res = await fetch(
+      `/kg/ask/stream?question=${encodeURIComponent(question)}&mediaId=${sidebar.value.mediaId}`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
+    )
+    if (!res.ok) throw new Error(`问答请求失败 (${res.status})`)
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop()
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        let event
+        try { event = JSON.parse(line.slice(6)) } catch { continue }
+        if (event.type === 'final') {
+          videoQa.value.answer = event.answer || ''
+          videoQa.value.citations = event.citations || []
+        } else if (event.type === 'error') {
+          videoQa.value.error = event.message || '问答失败'
+        } else {
+          videoQa.value.events.push(event)
+        }
+      }
+    }
+  } catch (error) {
+    videoQa.value.error = error.message || '问答请求失败'
+  } finally {
+    videoQa.value.loading = false
+  }
+}
+
+function onKgVideoLoaded(event) {
+  event.target.currentTime = kgVideo.value.startMs / 1000
+}
+
+// --- 模型设置 ---
+const settingsVisible = ref(false)
+const settingsLoading = ref(false)
+const settingsSaving = ref(false)
+const settingsTesting = ref('')
+const settingsMessage = ref('')
+const settingsMessageError = ref(false)
+const settingsTestResult = ref({})
+const settingsKinds = [
+  { key: 'llm', label: 'LLM（抽取/消歧/问答）', placeholder: 'deepseek-ai/DeepSeek-V3.2' },
+  { key: 'embedding', label: 'Embedding（向量化）', placeholder: 'BAAI/bge-m3' },
+  { key: 'asr', label: 'ASR（语音转写，Base URL 为完整转写端点）', placeholder: 'TeleAI/TeleSpeechASR' },
+  { key: 'reranker', label: 'Reranker（检索精排）', placeholder: 'BAAI/bge-reranker-v2-m3' }
+]
+const emptyCfg = () => ({ base_url: '', api_key: '', model: '' })
+const settingsForm = ref({ llm: emptyCfg(), embedding: emptyCfg(), asr: emptyCfg(), reranker: emptyCfg() })
+
+async function openSettings() {
+  settingsVisible.value = true
+  settingsLoading.value = true
+  settingsMessage.value = ''
+  try {
+    const res = await apiRequest('/admin/config/models')
+    if (!res.ok) throw new Error(await res.text() || '加载配置失败')
+    const data = await res.json()
+    if (data) {
+      for (const kind of settingsKinds) {
+        if (data[kind.key]) {
+          settingsForm.value[kind.key] = {
+            base_url: data[kind.key].base_url || '',
+            api_key: data[kind.key].api_key || '',
+            model: data[kind.key].model || ''
+          }
+        }
+      }
+    }
+  } catch (error) {
+    settingsMessage.value = error.message || '加载配置失败'
+    settingsMessageError.value = true
+  } finally {
+    settingsLoading.value = false
+  }
+}
+
+async function saveSettings() {
+  settingsSaving.value = true
+  settingsMessage.value = ''
+  try {
+    const res = await apiRequest('/admin/config/models', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settingsForm.value)
+    })
+    if (!res.ok) throw new Error(await res.text() || '保存失败')
+    settingsMessage.value = '已保存，30 秒内生效'
+    settingsMessageError.value = false
+  } catch (error) {
+    settingsMessage.value = error.message || '保存失败'
+    settingsMessageError.value = true
+  } finally {
+    settingsSaving.value = false
+  }
+}
+
+async function testModelConfig(kind) {
+  settingsTesting.value = kind
+  const result = { ...settingsTestResult.value }
+  delete result[kind]
+  settingsTestResult.value = result
+  try {
+    const res = await apiRequest('/admin/config/models/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settingsForm.value[kind])
+    })
+    if (res.ok) {
+      settingsTestResult.value = { ...settingsTestResult.value, [kind]: { ok: true, message: '连接成功' } }
+    } else {
+      const text = await res.text()
+      settingsTestResult.value = { ...settingsTestResult.value, [kind]: { ok: false, message: text || '连接失败' } }
+    }
+  } catch (error) {
+    settingsTestResult.value = { ...settingsTestResult.value, [kind]: { ok: false, message: error.message } }
+  } finally {
+    settingsTesting.value = ''
+  }
+}
+
 const authMode = ref('login')
 const authLoading = ref(false)
 const authMessage = ref('')
@@ -739,12 +1277,24 @@ const uploadFile = async () => {
   }
 
   try {
-    const uploadedMedia = await uploadVideoInChunks(target, applyUploadProgress, controller.signal)
+    const { mediaId, instant } = await uploadVideoS3(target, {
+      onProgress: progress => {
+        uploadProgress.value = {
+          ...uploadProgress.value,
+          label: progress.label || uploadProgress.value.label,
+          percent: progress.percent ?? uploadProgress.value.percent
+        }
+      },
+      signal: controller.signal
+    })
     if (currentUser.value?.id !== uploadUserId) return
     resumableFile.value = null
-    showMsg(`✅ ${target.name} 上传完成`)
+    showMsg(instant ? `⚡ ${target.name} 已上传过，已直接关联（秒传）` : `✅ ${target.name} 上传完成`)
     await fetchList({ notify: true })
-    openAgent(uploadedMedia)
+    if (!instant && mediaId) {
+      const item = list.value.find(m => String(m.id) === String(mediaId))
+      if (item) openAgent(item)
+    }
   } catch (error) {
     if (currentUser.value?.id !== uploadUserId) return
     rememberResumableUpload(target)
@@ -837,13 +1387,28 @@ const handleUrlUpload = async () => {
       body: formData
     })
     if (!res.ok) throw new Error(await res.text())
-    const uploadedMedia = await res.json()
+    const placeholder = await res.json()
     if (currentUser.value?.id !== uploadUserId) return
 
-    showMsg('✅ 链接资源已入库')
-    videoUrl.value = ''
-    await fetchList({ notify: true })
-    openAgent(uploadedMedia)
+    // 异步化：立即返回占位，轮询导入状态机（DOWNLOADING/PROBING/READY/DEDUP/FAILED）
+    showMsg('📥 导入任务已提交，正在从源站下载...')
+    const final = await pollImportStatus(placeholder.id)
+    if (currentUser.value?.id !== uploadUserId) return
+
+    if (final.status === 'READY') {
+      showMsg('✅ 链接资源已入库，知识图谱构建中')
+      videoUrl.value = ''
+      await fetchList({ notify: true })
+      openAgent({ id: placeholder.id, filename: placeholder.filename })
+    } else if (final.status === 'DEDUP') {
+      showMsg('✅ 相同内容已存在，已为你关联')
+      videoUrl.value = ''
+      await fetchList({ notify: true })
+      const dupId = Number(final.dedup_media_id)
+      openAgent(list.value.find(item => item.id === dupId) || { id: dupId, filename: '已有视频' })
+    } else {
+      throw new Error(final.message || '导入失败')
+    }
   } catch (error) {
     console.error(error)
     if (currentUser.value?.id !== uploadUserId) return
@@ -853,6 +1418,27 @@ const handleUrlUpload = async () => {
   } finally {
     uploading.value = false
   }
+}
+
+/** 轮询 URL 导入状态（3s 一次，最长 30 分钟，与 yt-dlp 超时对齐） */
+async function pollImportStatus(mediaId) {
+  const maxRounds = 600
+  for (let i = 0; i < maxRounds; i++) {
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    const res = await apiRequest(`/media/import-status?id=${mediaId}`)
+    if (!res.ok) continue
+    const status = await res.json()
+    if (uploadProgress.value) {
+      uploadProgress.value = {
+        ...uploadProgress.value,
+        detail: status.message || '导入进行中'
+      }
+    }
+    if (['READY', 'DEDUP', 'FAILED'].includes(status.status)) {
+      return status
+    }
+  }
+  return { status: 'FAILED', message: '导入超时，请稍后重试' }
 }
 
 /** 成功提示自动消失；错误提示保留到用户点掉，避免关键失败原因 4 秒后就没了。 */
@@ -889,6 +1475,7 @@ const fetchList = async ({ notify = false } = {}) => {
     if (res.status === 401) return null
     if (!res.ok) throw new Error('加载视频列表失败')
     list.value = await res.json()
+    fetchKgStatuses()
   } catch (error) {
     console.error(error)
     if (notify) showMsg('视频资料库加载失败，请稍后刷新', true)
@@ -896,6 +1483,41 @@ const fetchList = async ({ notify = false } = {}) => {
   }
   return list.value
 }
+
+// --- 知识图谱构建状态 ---
+const kgBuildStatus = ref({})  // mediaId -> { status, message }
+let kgStatusTimer = null
+
+async function fetchKgStatuses() {
+  if (DEMO_MODE || !currentUser.value) return
+  const items = list.value || []
+  await Promise.all(items.map(async item => {
+    try {
+      const res = await apiRequest(`/kg/status?mediaId=${item.id}`)
+      if (!res.ok) return
+      const data = await res.json()
+      if (data && data.status) {
+        kgBuildStatus.value = { ...kgBuildStatus.value, [item.id]: data }
+      }
+    } catch { /* 状态查询失败不影响列表展示 */ }
+  }))
+  // 有构建中的任务时 10s 轮询一次
+  const hasRunning = Object.values(kgBuildStatus.value).some(s => s.status === 'RUNNING')
+  if (hasRunning && !kgStatusTimer) {
+    kgStatusTimer = setInterval(async () => {
+      await fetchKgStatuses()
+      if (!Object.values(kgBuildStatus.value).some(s => s.status === 'RUNNING')) {
+        clearInterval(kgStatusTimer)
+        kgStatusTimer = null
+      }
+    }, 10000)
+  }
+}
+
+function kgStatusOf(mediaId) {
+  return kgBuildStatus.value[mediaId]?.status || null
+}
+
 
 const isSupportedVideo = selectedFile => {
   if (selectedFile.type?.startsWith('video/')) return true
@@ -944,6 +1566,11 @@ const {
   refreshMediaList: fetchList,
   findMediaItem: id => list.value.find(item => item.id === id),
   onAnswerAppended: () => scrollToLatestAnswer()
+})
+
+/** 打开 Video Agent 面板（切换视频）时重置问答状态 */
+watch(() => sidebar.value.mediaId, () => {
+  videoQa.value = { question: '', loading: false, events: [], answer: '', citations: [], error: '' }
 })
 
 /** 追问的答案追加在长文末尾，主动滚过去，否则用户会以为“点了没反应”。 */
@@ -1519,6 +2146,9 @@ html, body, #app {
 .status-indicator.processing { color: var(--accent-purple); border: 1px solid var(--accent-purple); animation: blink 1s infinite; }
 .status-indicator.failed { color: #ff7c88; border: 1px solid #ff4757; background: rgba(255, 71, 87, 0.08); }
 .status-indicator.unknown { color: var(--text-sub); border: 1px solid var(--border-tech); }
+.status-indicator.kg-status.running { color: var(--accent-purple); border: 1px solid var(--accent-purple); animation: blink 1s infinite; }
+.status-indicator.kg-status.success { color: var(--accent-lime); border: 1px solid var(--accent-lime); background: rgba(197, 249, 70, 0.06); }
+.status-indicator.kg-status.failed { color: #ff7c88; border: 1px solid #ff4757; }
 
 .action-dock { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 12px; padding: 12px; background: rgba(5, 8, 5, 0.5); }
 .dock-item { position: relative; border: 1px solid var(--border-tech); background: var(--bg-card); border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s; color: var(--text-sub); font-family: monospace; overflow: hidden; }
@@ -1529,6 +2159,70 @@ html, body, #app {
 .dock-item.ai-core .item-sub { font-size: 0.75rem; color: var(--accent-purple); opacity: 0.8; }
 .dock-item.ai-core:hover:not(:disabled) { border-color: var(--accent-lime); color: var(--text-inverse); background: var(--accent-lime); }
 .dock-item.ai-core:hover:not(:disabled) .item-sub { color: var(--text-inverse); }
+
+/* 知识图谱问答 */
+.kg-section { max-width: 1200px; margin: 0 auto 40px; padding: 0 20px; }
+.kg-card { background: var(--bg-card); border: 1px solid var(--border-tech); border-radius: 12px; padding: 24px; }
+.kg-header h3 { margin: 0; color: var(--text-main); font-size: 1.2rem; }
+.kg-sub { margin: 6px 0 0; color: var(--text-sub); font-size: 0.85rem; }
+.kg-input-row { display: flex; gap: 10px; margin-top: 16px; }
+.kg-input { flex: 1; background: var(--bg-deep); border: 1px solid var(--border-tech); border-radius: 8px; padding: 12px 14px; color: var(--text-main); outline: none; transition: border-color 0.2s; }
+.kg-input:focus { border-color: var(--accent-lime); }
+.kg-mode { background: var(--bg-deep); border: 1px solid var(--border-tech); border-radius: 8px; color: var(--text-sub); padding: 0 10px; }
+.kg-ask-btn { background: var(--accent-lime); border: none; border-radius: 8px; padding: 0 24px; font-weight: 700; color: #0b0c10; cursor: pointer; transition: opacity 0.2s; }
+.kg-ask-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.kg-error { color: #ff7c88; margin-top: 12px; font-size: 0.9rem; }
+.kg-answer { margin-top: 16px; color: var(--text-main); line-height: 1.7; border-top: 1px solid var(--border-tech); padding-top: 16px; }
+.kg-tools { margin-top: 12px; font-size: 0.8rem; color: var(--text-sub); font-family: monospace; }
+.kg-tools-label { color: var(--accent-purple); }
+.kg-citations { margin-top: 16px; }
+.kg-cite-title { color: var(--accent-lime); font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
+.kg-cite-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+.kg-cite-item { display: flex; gap: 10px; background: var(--bg-deep); border: 1px solid var(--border-tech); border-radius: 8px; padding: 10px; cursor: pointer; transition: border-color 0.2s; }
+.kg-cite-item:hover { border-color: var(--accent-lime); }
+.kg-cite-frame { width: 96px; height: 54px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.kg-cite-body { min-width: 0; }
+.kg-cite-time { color: var(--accent-lime); font-size: 0.75rem; font-family: monospace; }
+.kg-cite-text { color: var(--text-sub); font-size: 0.8rem; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Agent 思考过程 */
+.kg-thinking { margin-top: 16px; border: 1px solid var(--border-tech); border-radius: 8px; padding: 12px; background: rgba(138, 43, 226, 0.04); }
+.kg-thinking-title { color: var(--accent-purple); font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
+.kg-event { margin-bottom: 8px; font-size: 0.82rem; }
+.kg-event.tool_start { display: flex; align-items: center; gap: 8px; }
+.kg-event-icon { flex-shrink: 0; }
+.kg-event-name { color: var(--accent-lime); font-family: monospace; font-weight: 600; }
+.kg-event-query { color: var(--text-main); }
+.kg-event-result { color: var(--text-sub); font-size: 0.78rem; margin: 4px 0 10px 24px; padding-left: 10px; border-left: 2px solid var(--border-tech); white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
+
+/* 溯源视频播放弹窗 */
+.kg-video-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.kg-video-modal { background: var(--bg-card); border: 1px solid var(--border-tech); border-radius: 12px; padding: 16px; max-width: 800px; width: 90%; }
+.kg-video-header { display: flex; justify-content: space-between; align-items: center; color: var(--text-main); font-size: 0.9rem; margin-bottom: 10px; }
+.kg-video-close { background: none; border: none; color: var(--text-sub); font-size: 1.1rem; cursor: pointer; }
+.kg-video-close:hover { color: var(--text-main); }
+.kg-video-player { width: 100%; border-radius: 8px; background: #000; }
+
+/* 模型设置弹窗 */
+.settings-btn { background: none; border: none; color: var(--text-sub); cursor: pointer; padding: 4px; }
+.settings-btn:hover { color: var(--accent-lime); }
+.settings-modal { background: var(--bg-card); border: 1px solid var(--border-tech); border-radius: 12px; padding: 20px; max-width: 640px; width: 92%; max-height: 85vh; overflow-y: auto; }
+.settings-section { border: 1px solid var(--border-tech); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+.settings-section-title { color: var(--accent-purple); font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
+.settings-field { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.settings-field label { width: 70px; color: var(--text-sub); font-size: 0.8rem; flex-shrink: 0; }
+.settings-field input { flex: 1; background: var(--bg-deep); border: 1px solid var(--border-tech); border-radius: 6px; padding: 8px 10px; color: var(--text-main); outline: none; font-size: 0.85rem; }
+.settings-field input:focus { border-color: var(--accent-lime); }
+.settings-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.settings-test-btn { background: none; border: 1px solid var(--border-tech); border-radius: 6px; color: var(--text-sub); padding: 5px 14px; cursor: pointer; font-size: 0.8rem; }
+.settings-test-btn:hover:not(:disabled) { border-color: var(--accent-lime); color: var(--accent-lime); }
+.settings-test-result { font-size: 0.8rem; }
+.settings-test-result.ok { color: var(--accent-lime); }
+.settings-test-result.fail { color: #ff7c88; }
+.settings-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.settings-message { color: var(--accent-lime); font-size: 0.85rem; margin: 0; }
+.settings-message.error { color: #ff7c88; }
+.settings-hint { color: var(--text-sub); text-align: center; padding: 20px; }
 
 /* Sidebar */
 .sidebar-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 998; }
@@ -1565,6 +2259,17 @@ html, body, #app {
 .video-evidence-error { min-height: 110px; padding: 18px 30px; display: flex; align-items: center; justify-content: center; gap: 12px; color: #ff9aa4; }
 .video-evidence-error button { border: 1px solid #ff4757; background: transparent; color: #ff9aa4; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
 .agent-composer { display: flex; flex-direction: column; gap: 18px; }
+.agent-tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border-tech); padding-bottom: 12px; }
+.agent-tabs button {
+  background: transparent; border: 1px solid var(--border-tech); color: var(--text-sub);
+  padding: 7px 18px; border-radius: 6px; cursor: pointer; font-size: 0.88rem; transition: all 0.2s;
+}
+.agent-tabs button:hover { color: var(--text-main); border-color: var(--accent, #4f8cff); }
+.agent-tabs button.active {
+  background: rgba(79, 140, 255, 0.12); color: var(--accent, #4f8cff); border-color: var(--accent, #4f8cff);
+}
+.video-qa-panel { display: flex; flex-direction: column; gap: 14px; }
+.video-qa-panel .kg-input-row { margin-top: 0; }
 .agent-caption { color: var(--text-sub); line-height: 1.7; }
 .inline-error { padding: 11px 12px; border-left: 2px solid #ff4757; background: rgba(255, 71, 87, 0.08); color: #ff9aa4; line-height: 1.5; }
 .agent-composer textarea, .follow-up-box textarea {
@@ -1728,4 +2433,28 @@ html, body, #app {
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulse-lime { 0% { opacity: 0.5; box-shadow: 0 0 5px var(--accent-lime); } 100% { opacity: 1; box-shadow: 0 0 15px var(--accent-lime); } }
 @keyframes blink { 50% { opacity: 0.5; } }
+
+/* ===== 视频卡片增强（#69） ===== */
+.library-sort { background: var(--bg-card); border: 1px solid var(--border-tech); color: var(--text-sub); border-radius: 4px; padding: 6px 10px; font-size: 0.8rem; outline: none; cursor: pointer; }
+.library-sort:focus { border-color: var(--accent-primary, #3b82f6); }
+
+.card-cover { position: relative; width: 100%; aspect-ratio: 16/9; overflow: hidden; border-bottom: 1px solid var(--border-tech); background: #000; }
+.card-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover-duration { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,0.72); color: #fff; font-size: 0.72rem; padding: 2px 6px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+
+.kg-status.clickable { cursor: pointer; }
+.kg-status.clickable:hover { filter: brightness(1.3); }
+
+.lifecycle-panel { margin: 8px 12px 12px; padding: 10px 12px; background: var(--bg-card); border: 1px solid var(--border-tech); border-radius: 6px; display: flex; flex-direction: column; gap: 6px; }
+.lifecycle-step { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-sub); }
+.lifecycle-step .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-tech); flex-shrink: 0; }
+.lifecycle-step.done { color: var(--text-sub); }
+.lifecycle-step.done .step-dot { background: #22c55e; }
+.lifecycle-step.active { color: var(--text-main, #e5e7eb); font-weight: 600; }
+.lifecycle-step.active .step-dot { background: #3b82f6; box-shadow: 0 0 6px #3b82f6; animation: pulse-dot 1.2s infinite; }
+.lifecycle-step.failed { color: #ef4444; }
+.lifecycle-step .step-progress { font-variant-numeric: tabular-nums; color: #3b82f6; }
+.lifecycle-step .step-msg { color: var(--text-sub); font-size: 0.72rem; }
+@keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
 </style>

@@ -9,6 +9,7 @@ public record MediaSummary(
         String filename,
         String status,
         String coverUrl,
+        Long durationMs,
         LocalDateTime uploadTime
 ) {
     public static MediaSummary from(MediaFile mediaFile) {
@@ -17,6 +18,7 @@ public record MediaSummary(
                 mediaFile.getFilename(),
                 mediaFile.getStatus(),
                 mediaFile.getCoverUrl(),
+                mediaFile.getDurationMs(),
                 mediaFile.getUploadTime());
     }
 }

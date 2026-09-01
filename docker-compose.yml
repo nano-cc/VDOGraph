@@ -9,9 +9,8 @@ services:
       MYSQL_USER: ${MYSQL_APP_USER:-dovideo}
       MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       TZ: Asia/Shanghai
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - ./mysql/data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 5s
@@ -84,3 +83,4 @@ services:
 volumes:
   rocketmq-store:
   rocketmq-logs:
+  mysql-data:

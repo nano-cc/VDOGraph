@@ -45,8 +45,10 @@ public class YtDlpUtils {
         // Prefer the broadly supported H.264/AVC + AAC combination for imported
         // videos. Merely changing an AV1 file's container to MP4 does not make it
         // playable in Safari on every macOS and hardware combination.
+        // 链尾的 b[ext=mp4]/b 是兜底：直链 mp4 经 generic 提取器时没有 vcodec 元数据，
+        // 严格匹配会报 "Requested format is not available"，--recode-video 负责最终转码
         command.add("-f");
-        command.add("bv*[vcodec^=avc1][ext=mp4]+ba[acodec^=mp4a][ext=m4a]/b[vcodec^=avc1][ext=mp4]/bv*[vcodec^=avc1]+ba[acodec^=mp4a]");
+        command.add("bv*[vcodec^=avc1][ext=mp4]+ba[acodec^=mp4a][ext=m4a]/b[vcodec^=avc1][ext=mp4]/bv*[vcodec^=avc1]+ba[acodec^=mp4a]/b[ext=mp4]/b");
         command.add("--merge-output-format");
         command.add("mp4");
         command.add("--recode-video");

@@ -1,0 +1,871 @@
+[
+  {
+    "id": "beef-01",
+    "video": "中国人牛肉自由",
+    "question": "今年开始搞的牛肉进口配额到底有多少吨？超了配额要多交多少关税？",
+    "type": "local",
+    "expected_segment_indexes": [
+      0
+    ],
+    "expected_answer_points": [
+      "268.8万吨",
+      "超出部分加征55%关税",
+      "2025年1月1日起实施"
+    ],
+    "reference_answer": "进口牛肉配额制从2025年1月1日起实施，国家给主要牛肉进口国划好配额，总量为268.8万吨。配额内正常收取关税，超出配额的部分要加征55%的关税。"
+  },
+  {
+    "id": "beef-02",
+    "video": "中国人牛肉自由",
+    "question": "2024年国内肉牛养殖行业一共亏了多少钱？",
+    "type": "local",
+    "expected_segment_indexes": [
+      1
+    ],
+    "expected_answer_points": [
+      "2024年亏了360亿",
+      "2023年亏140亿",
+      "70%以上养殖户亏损"
+    ],
+    "reference_answer": "国内肉牛养殖行业从2023年开始急转直下，2023年亏了140亿，2024年亏损扩大到360亿。当时全国70%以上的肉牛养殖户都在亏钱，一头牛出栏平均要亏1600块。"
+  },
+  {
+    "id": "beef-03",
+    "video": "中国人牛肉自由",
+    "question": "视频里说巴西养一头牛的成本跟中国比差多少？",
+    "type": "local",
+    "expected_segment_indexes": [
+      8
+    ],
+    "expected_answer_points": [
+      "巴西约6900元人民币",
+      "中国约14500元",
+      "差了约2.1倍"
+    ],
+    "reference_answer": "据视频测算，巴西养一头牛的总成本大约是6900元人民币，而中国是14500元人民币，差了整整2.1倍。从种牛、饲料到人工、水电层层叠加，中国养牛成本根本降不下来。"
+  },
+  {
+    "id": "beef-04",
+    "video": "中国人牛肉自由",
+    "question": "2019年那会儿牛肉进口量涨得有多猛？",
+    "type": "local",
+    "expected_segment_indexes": [
+      3
+    ],
+    "expected_answer_points": [
+      "从103万吨涨到166万吨",
+      "一年涨了60%",
+      "2020年再涨到214万吨"
+    ],
+    "reference_answer": "2019年牛肉进口量从前一年的103万吨飙升到166万吨，一年就涨了60%。2020年又涨到214万吨，两年翻了一倍。"
+  },
+  {
+    "id": "beef-05",
+    "video": "中国人牛肉自由",
+    "question": "视频里说的\"北牛南养\"是个啥模式？具体怎么操作的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      6
+    ],
+    "expected_answer_points": [
+      "在内蒙东北等有草的地方把牛犊养成架子牛",
+      "运到山东河北安徽等粮食产区育肥",
+      "再供应全国市场"
+    ],
+    "reference_answer": "“北牛南养”就是在内蒙古、东北这些有草的地方把牛犊养成架子牛，然后运到山东、河北、安徽这些粮食主产区用便宜玉米育肥养胖，再供应全国市场。简单说就是哪里有草就在哪里养小牛，哪里有便宜玉米就在哪里育肥，河北就是这种模式的典型。"
+  },
+  {
+    "id": "beef-06",
+    "video": "中国人牛肉自由",
+    "question": "视频里是怎么形容巴西和阿根廷的草场条件的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      7
+    ],
+    "expected_answer_points": [
+      "巴西有1.7亿公顷天然草场，相当于整个新疆铺满草",
+      "阿根廷潘帕斯草原66万平方公里",
+      "牧草产量是中国锡林郭勒的5到8倍"
+    ],
+    "reference_answer": "视频说巴西有1.7亿公顷天然草场，相当于整个新疆全部铺满草，牧场大到要开飞机巡视，形容为“已经不是地上长草，而是草上长牛”。阿根廷的潘帕斯草原有66万平方公里，牧草产量是中国锡林郭勒的5到8倍，所以这些国家都能用天然放牧的方式养牛。"
+  },
+  {
+    "id": "beef-07",
+    "video": "中国人牛肉自由",
+    "question": "看完这个视频，为什么国产牛肉价格就是降不下来、打不过国外？",
+    "type": "global",
+    "expected_segment_indexes": [
+      5,
+      6,
+      7,
+      8
+    ],
+    "expected_answer_points": [
+      "牛的养殖周期长（怀孕280天、出栏约3年），难以工业化",
+      "资源禀赋差，国外有天然草场可以放牧",
+      "饲料、人工等综合成本远高于巴西等国",
+      "国产肉牛体型小（平均胴体150公斤，美国369公斤）"
+    ],
+    "reference_answer": "核心原因是养牛难以工业化：母牛怀孕要280天，从配种到肉牛出栏整个周期约3年，远长于猪鸡，而且占地和环保成本也高。其次是资源禀赋差距，巴西有1.7亿公顷天然草场、阿根廷潘帕斯草原牧草产量是锡林郭勒的5到8倍，可以天然放牧，饲料也更便宜。再加上国产肉牛体型小（平均胴体仅150公斤，美国是369公斤），巴西养一头牛约6900元而中国要14500元，成本差了2.1倍，国产牛肉自然打不过国外。"
+  },
+  {
+    "id": "hist-01",
+    "video": "历史",
+    "question": "视频开头说法国战败后签的那个合约，具体赔了多少钱、割了哪块地？",
+    "type": "local",
+    "expected_segment_indexes": [
+      0
+    ],
+    "expected_answer_points": [
+      "赔款50亿法郎",
+      "割让阿尔萨斯洛林地区",
+      "1871年2月26日签订"
+    ],
+    "reference_answer": "1871年2月26日，法国资产阶级政府在普法战争惨败后与普鲁士签订了丧权辱国的合约：法国割让边境的阿尔萨斯洛林地区，并赔款50亿法郎。"
+  },
+  {
+    "id": "hist-02",
+    "video": "历史",
+    "question": "甘必大是怎么逃出被围的巴黎去搬救兵的？",
+    "type": "local",
+    "expected_segment_indexes": [
+      4
+    ],
+    "expected_answer_points": [
+      "坐热气球离开巴黎",
+      "抵达图尔",
+      "拉起了一支10万人的军队"
+    ],
+    "reference_answer": "甘必大在10月3日决定冒险，乘热气球离开被围困的巴黎去外省求援，这也是当时巴黎与外界取得联系仅有的方式之一。他最终成功抵达图尔，拉起了一支10万人的大军，成为解救巴黎最后的希望。"
+  },
+  {
+    "id": "hist-03",
+    "video": "历史",
+    "question": "围城的时候巴黎普通工人一天的工资能买到啥？",
+    "type": "local",
+    "expected_segment_indexes": [
+      10
+    ],
+    "expected_answer_points": [
+      "工人日薪平均不到5法郎",
+      "一天工资只够买一颗卷心菜",
+      "活鸡涨到180法郎"
+    ],
+    "reference_answer": "1870年巴黎工人的日薪平均不到5法郎，而卷心菜已经涨到4法郎一颗，一天的工资只够买一颗卷心菜。战前10法郎的活鸡更是涨到整整180法郎，无产阶级根本负担不起，饥荒席卷全城。"
+  },
+  {
+    "id": "hist-04",
+    "video": "历史",
+    "question": "巴黎公社一共存在了多久？最后是被谁联手灭掉的？",
+    "type": "local",
+    "expected_segment_indexes": [
+      32
+    ],
+    "expected_answer_points": [
+      "只存在了72天",
+      "被梯也尔领导的资产阶级政府所灭",
+      "俾斯麦率领的德军联手配合"
+    ],
+    "reference_answer": "巴黎公社只存在了短短72天。它最终被梯也尔领导的资产阶级政府和俾斯麦率领的德军联手毁灭。"
+  },
+  {
+    "id": "hist-05",
+    "video": "历史",
+    "question": "视频里说巴黎公社给自家官员定的工资上限是多少？这标准怎么定的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      29
+    ],
+    "expected_answer_points": [
+      "每年最高6000法郎",
+      "与当时巴黎熟练工人的最高薪金相等",
+      "体现平等思想，废除高官高薪"
+    ],
+    "reference_answer": "公社在4月2日签发的法令中规定，各公社机关职员的最高薪金为每年6000法郎。这个数额与当时巴黎熟练工人的最高薪金相等，废除了过去把高级职务当肥缺钻营的高薪制度，完美体现了公社的平等思想。"
+  },
+  {
+    "id": "hist-06",
+    "video": "历史",
+    "question": "《国际歌》这首歌是怎么来的？视频里怎么讲的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      48,
+      49
+    ],
+    "expected_answer_points": [
+      "巴黎公社幸存者、诗人欧仁·鲍狄埃创作",
+      "在一间小阁楼里写成",
+      "把公社失败后的理想激情和悲愤融入歌中，后来传遍世界"
+    ],
+    "reference_answer": "《国际歌》是巴黎公社的幸存者、亲历过战斗的法国诗人欧仁·鲍狄埃在一间小阁楼里创作出来的。他在公社失败后把自己所有的理想、激情和悲愤都融入了这首歌，后来这首歌传遍五洲四海，在西班牙的国际纵队营地、越南的丛林电台都能听到。"
+  },
+  {
+    "id": "hist-07",
+    "video": "历史",
+    "question": "这个视频觉得巴黎公社为什么会失败？自身和外部原因都聊聊。",
+    "type": "global",
+    "expected_segment_indexes": [
+      32,
+      33,
+      36,
+      37
+    ],
+    "expected_answer_points": [
+      "自身失误：让梯也尔等政府成员逃走了，日后卷土重来",
+      "没有没收法兰西银行，权力分散、缺少统一政党领导",
+      "外部：德国民众民族主义情绪强，支持俾斯麦索赔",
+      "法国农民占人口八成以上且保守，巴黎得不到全国支持"
+    ],
+    "reference_answer": "自身失误方面：起义时只推翻了资产阶级政府却没控制住其成员，让梯也尔等人逃走去凡尔赛重组政府、卷土重来；过于尊重私有财产权，连拥有巨额现金的法兰西银行都没有没收，使其一直给梯也尔政府提供资金；权力结构分散，缺少集中统一的政党领导，决策犹豫低效。外部环境方面：德国民众民族主义情绪旺盛，认为法国作为主动宣战的战败方理应赔偿，大多站在俾斯麦一边；法国农民占总人口八成以上，普遍保守、信息受地主教会和资产阶级媒体控制，主张割地求和的梯也尔政府正是全国选举选出的多数派，巴黎公社根本得不到全国支持。"
+  },
+  {
+    "id": "hist2-01",
+    "video": "历史2",
+    "question": "特洛伊战争在视频里被归到哪个时期？",
+    "type": "local",
+    "expected_segment_indexes": [
+      0
+    ],
+    "expected_answer_points": [
+      "迈锡尼时期",
+      "造了巨大的木马"
+    ],
+    "reference_answer": "视频把特洛伊战争归到古希腊的迈锡尼时期：希腊人围城十年死活进不去，最后造了台巨大的木马。"
+  },
+  {
+    "id": "hist2-02",
+    "video": "历史2",
+    "question": "视频里亚历山大死后，他的大帝国落得什么下场？",
+    "type": "local",
+    "expected_segment_indexes": [
+      1
+    ],
+    "expected_answer_points": [
+      "三十出头得了疟疾去世",
+      "帝国立马被手下瓜分",
+      "亚、欧、非各分一块"
+    ],
+    "reference_answer": "视频说亚历山大三十出头就到达人生巅峰，还想着“更上一层楼”，结果得了疟疾去世。老大没了之后，巨大的帝国立马被手下分了行李，亚、欧、非各分一块。"
+  },
+  {
+    "id": "hist2-03",
+    "video": "历史2",
+    "question": "视频里说哪个皇帝把罗马帝国分成东西两块？搞的那个制度叫啥？",
+    "type": "local",
+    "expected_segment_indexes": [
+      3
+    ],
+    "expected_answer_points": [
+      "戴克里先",
+      "分成东西两块，由两对大皇帝小皇帝管理",
+      "号称四帝共治"
+    ],
+    "reference_answer": "是皇帝戴克里先把罗马帝国分成东、西两块，分别由一对大皇帝和小皇帝管理，一共四个皇帝，号称“四帝共治”。"
+  },
+  {
+    "id": "hist2-04",
+    "video": "历史2",
+    "question": "视频里是怎么解释法兰克王国为啥突然碎成三块的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      5
+    ],
+    "expected_answer_points": [
+      "日耳曼习俗：父亲死后遗产要平均分给儿子们",
+      "查理曼家一下生了三个孙子",
+      "统一起来的法兰克王国碎成三块"
+    ],
+    "reference_answer": "视频解释说日耳曼人有个习俗：父亲死后遗产要平均分给儿子们。查理曼他们家一下生了三个孙子，好不容易统一起来的法兰克王国于是“哗啦”一声碎成了三块。"
+  },
+  {
+    "id": "hist2-05",
+    "video": "历史2",
+    "question": "视频里是怎么调侃哥伦布的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      9
+    ],
+    "expected_answer_points": [
+      "他至死都坚持以为自己到的是印度或日本",
+      "当时欧洲人以为日本属于大印度"
+    ],
+    "reference_answer": "视频调侃哥伦布“脑子里除了有水，可能还有浆糊”，因为他到死都坚持以为自己到达的是印度或日本——那会儿欧洲人以为日本属于大印度。"
+  },
+  {
+    "id": "hist2-06",
+    "video": "历史2",
+    "question": "这个视频整体上按什么脉络把欧洲史串了一遍？",
+    "type": "global",
+    "expected_segment_indexes": [
+      0,
+      3,
+      5,
+      8,
+      10,
+      11
+    ],
+    "expected_answer_points": [
+      "从古希腊时代讲起（特洛伊、希波战争、亚历山大）",
+      "再到罗马时代（共和国、帝国分裂、西罗马灭亡）",
+      "然后是中世纪（法兰克分裂、英法相斗、基督教）和文艺复兴",
+      "最后到大航海殖民、美国独立、拿破仑，直至世界大战"
+    ],
+    "reference_answer": "视频按时间脉络串了一遍极简欧洲史：从古希腊时代讲起（特洛伊战争、希波战争、亚历山大东征），接着进入罗马时代（罗马共和国崛起、戴克里先四帝共治、帝国东西分裂），然后是中世纪（法兰克王国因均分遗产碎成三块、奥托大帝），再到约1500年大航海时代打通世界（哥伦布、日不落帝国）、美洲殖民地独立建美国、拿破仑兵败滑铁卢，最后到二十世纪欧洲拉帮结派，走向世界大战。"
+  },
+  {
+    "id": "boston1-01",
+    "video": "波士顿圆脸",
+    "question": "林肯号航母上水兵的伙食被削减成什么样了？",
+    "type": "local",
+    "expected_segment_indexes": [
+      3
+    ],
+    "expected_answer_points": [
+      "部分船员饭菜被削减到半杯米饭和两张玉米饼",
+      "营养和能量不足以支撑高强度战备工作",
+      "这是加州议员披露的细节"
+    ],
+    "reference_answer": "据加州议员披露的细节，部分船员的饭菜甚至被削减到只有半杯米饭和两张玉米饼。这样的营养和能量根本不足以支撑航母上高强度、高压力的战备工作，此外洗衣机连坏几周、长期没有热水、肥皂牙膏都缺。"
+  },
+  {
+    "id": "boston1-02",
+    "video": "波士顿圆脸",
+    "question": "按视频里的说法，海上部署多长时间算正常，林肯号已经部署多久了？",
+    "type": "local",
+    "expected_segment_indexes": [
+      2
+    ],
+    "expected_answer_points": [
+      "正常海上部署100天左右是分界线",
+      "到150天人会进入red zone、精神极端承压",
+      "林肯号已经250天基本没靠岸"
+    ],
+    "reference_answer": "正常的海上部署以100天左右作为分界线，到150天人就进入所谓的“red zone”——精神极端承压、操作执行不精确、注意力涣散。而林肯号已经250天基本没靠岸，中间只在阿曼紧急靠岸一天补充淡水，水兵还不许下船。"
+  },
+  {
+    "id": "boston1-03",
+    "video": "波士顿圆脸",
+    "question": "视频里说的美国海军的\"三分之一法则\"具体是啥意思？是在哪一段讲的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      8
+    ],
+    "expected_answer_points": [
+      "三分之一整修、三分之一训练、三分之一真正能用",
+      "还要留王牌在手里不能随便打出去",
+      "王牌打出去别人就知道你没牌了"
+    ],
+    "reference_answer": "视频在讲海军舰艇调度困境时提到“三分之一法则”：十几艘航母基本要维持三分之一整修、三分之一训练、三分之一真正能用的节奏。而且手里还要留着王牌中的王牌不能随便打出去——一旦把王牌打出去，别人就知道你没牌了，造成的损伤可能比不打还大。"
+  },
+  {
+    "id": "boston1-04",
+    "video": "波士顿圆脸",
+    "question": "视频里提到哪位舰长因为替手下士兵说话结果被撤职了？",
+    "type": "local",
+    "expected_segment_indexes": [
+      10
+    ],
+    "expected_answer_points": [
+      "布雷特·克罗泽舰长",
+      "疫情期间代表全舰官兵写信反映超期部署问题",
+      "被认为动摇军心而撤销职位"
+    ],
+    "reference_answer": "是布雷特·克罗泽舰长。疫情期间他代表全舰官兵写信反映超期部署问题，信被泄露让公众知道了舰上情况，后来被认为动摇军心而撤销职位。他被视为真正的英雄，但现在过得非常糟糕。"
+  },
+  {
+    "id": "boston1-05",
+    "video": "波士顿圆脸",
+    "question": "\"士气下降60%多甚至出现幻觉对友军开火\"这个说法出自视频哪部分？依据是什么？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      11
+    ],
+    "expected_answer_points": [
+      "依据是美国自己做的军事研究",
+      "超期服役越久士气和军事表现指数级下降",
+      "按图推算250天已下降60%多，有人出现幻觉把敌军看成友军开火"
+    ],
+    "reference_answer": "这个说法的依据是美国自己做的军事研究：随着超期服役时间拉长，士兵的士气和军事表现呈指数级下降。按照研究画的图推算，林肯号部署250天表现起码下降了60%多，甚至有人出现幻觉，把敌军看成友军直接开火，已经有人精神失常。"
+  },
+  {
+    "id": "boston1-06",
+    "video": "波士顿圆脸",
+    "question": "这个视频整体上讲，林肯号的水兵为什么会被逼到想跳海？",
+    "type": "global",
+    "expected_segment_indexes": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "expected_answer_points": [
+      "250天超期部署几乎不靠岸，补给跟不上",
+      "生活条件恶劣：洗衣机坏、没热水、缺肥皂牙膏、伙食被削减",
+      "士兵不知为何而战、缺乏精神支柱，只是为钱和学费参军",
+      "看心理医生会影响安全许可、晋升和退役待遇，求助无门"
+    ],
+    "reference_answer": "林肯号250天基本不靠岸、补给跟不上，生活条件极其恶劣：洗衣机连坏几周、没有热水、缺肥皂牙膏，伙食被削减到半杯米饭两张玉米饼。士兵们大多是出不起大学学费、为钱和退伍金才参军，不知为何而战、没有精神支柱，却被当耗材一样扔在海上为特朗普侵略伊朗的战略服务。而找心理医生又可能被停安全许可、调离关键岗位，影响晋升甚至退役待遇，求助无门，最终把人逼到想跳海。"
+  },
+  {
+    "id": "boston2-01",
+    "video": "波士顿圆脸2",
+    "question": "8月15号这次高市早苗是怎么\"拜鬼\"的？她本人去了吗？",
+    "type": "local",
+    "expected_segment_indexes": [
+      0,
+      1
+    ],
+    "expected_answer_points": [
+      "本人没去靖国神社，但私费供奉了玉串料",
+      "不用公费是因为日本宪法规定政教分离",
+      "署名只写自己名字不写总理大臣，表示是个人行为"
+    ],
+    "reference_answer": "8月15日日本无条件投降81周年，高市早苗本人没去靖国神社，但以私费供奉了玉串料“表个心意”，相当于去了。不用公费是因为日本宪法规定政教分离，署名也只写自己的名字、不写总理大臣，以此表示这是个人行为。"
+  },
+  {
+    "id": "boston2-02",
+    "video": "波士顿圆脸2",
+    "question": "高市早苗当选的时候，日本选民最关心什么议题？视频里有具体比例吗？",
+    "type": "local",
+    "expected_segment_indexes": [
+      2
+    ],
+    "expected_answer_points": [
+      "62%的民众最关心经济民生问题",
+      "33%关心外交国防问题",
+      "日元贬值严重，经济民生承诺无法兑现所以转向炒作国防议题"
+    ],
+    "reference_answer": "高市早苗当选时，62%的民众最关心经济民生问题，33%关心外交国防问题。但当时日元贬值非常严重，美国明确表示想帮日本一把却根本帮不了，经济民生承诺完全无法兑现，所以只好拼命炒作外交国防议题。"
+  },
+  {
+    "id": "boston2-03",
+    "video": "波士顿圆脸2",
+    "question": "视频里说日本右翼用AI篡改投降相关文件，具体是怎么改的？这在哪一段？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      6
+    ],
+    "expected_answer_points": [
+      "日本右翼用AI生成多种语言版本",
+      "把文件上的surrender（投降）改成peace（和平协议）",
+      "旁边还保留原签字人的签名来误导全世界民众"
+    ],
+    "reference_answer": "这在视频讲日本篡改投降文书的一段。日本右翼为了误导全世界民众，最近用AI生成多种语言版本，把文件上明晃晃的“surrender（投降）”改成“peace（和平协议）”，旁边还保留原签字人的签名，以此掩盖投降的事实。"
+  },
+  {
+    "id": "boston2-04",
+    "video": "波士顿圆脸2",
+    "question": "小时候杂志上那个日本人刷马桶刷到敢喝马桶水的故事，主角是谁？",
+    "type": "local",
+    "expected_segment_indexes": [
+      7,
+      8
+    ],
+    "expected_answer_points": [
+      "主角是野田圣子",
+      "故事讲清洁工刷马桶干净到自己舀一瓢喝下去",
+      "这是歌颂日本人勤恳的鸡汤文，作者指出其不科学"
+    ],
+    "reference_answer": "主角是野田圣子。故事讲她想干大事，被清洁工教训连小事都干不了，师傅示范刷马桶刷到干净后自己舀一瓢水当面喝下去，她被震撼后立志把马桶刷到自己敢喝的程度，最后终于成功——这是歌颂日本人勤恳的鸡汤文，视频指出从科学角度讲，刷得再干净马桶水也不该喝。"
+  },
+  {
+    "id": "boston2-05",
+    "video": "波士顿圆脸2",
+    "question": "这个视频认为日本是怎样系统性地歪曲二战历史的？",
+    "type": "global",
+    "expected_segment_indexes": [
+      4,
+      5,
+      6
+    ],
+    "expected_answer_points": [
+      "只讲太平洋战争、淡化对中国的侵略战争",
+      "宣传投降是因为美国原子弹，把自己包装成主动带来和平的功臣",
+      "围绕原子弹建纪念地申遗、拍片哭惨",
+      "用AI把投降文书里的surrender改成peace，借美国媒体霸权向全世界洗脑"
+    ],
+    "reference_answer": "视频认为日本的系统性歪曲包括：淡化历史、只讲所谓太平洋战争，对侵略中国的战争完全不提；宣传投降不是因为被中国人民打败，而是因为美国的原子弹，把自己包装成“主动带来和平”的功臣；围绕原子弹建纪念地、申报联合国遗产、拍片哭惨；甚至用AI把投降文书里的surrender改成peace，再借着冷战背景下美国拉拢日本的机会，借美国媒体霸权向全世界洗脑。"
+  },
+  {
+    "id": "boston2-06",
+    "video": "波士顿圆脸2",
+    "question": "视频里关于昭和天皇对靖国神社合祀甲级战犯的态度是怎么说的？出自哪部分？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      12,
+      13
+    ],
+    "expected_answer_points": [
+      "昭和天皇逃过东京审判是美国人保下来的",
+      "知道甲级战犯被合祀后极度不满，点名批评了操办的神官",
+      "他不满的真实原因是怕与战犯绑在一起、脏了与美国的肮脏交易，并非反战"
+    ],
+    "reference_answer": "视频说昭和天皇逃过东京审判是美国人保下来的。他知道甲级战犯被合祀后极度不满，点名批评了操办此事的神官，这是他日记被曝光后大家才知道的。但他不满的真实原因是怕自己被绑到甲级战犯一起、脏了与美国进入冷战的肮脏交易，并非反战，视频提醒大家不要为昭和天皇洗地。"
+  },
+  {
+    "id": "boston2-07",
+    "video": "波士顿圆脸2",
+    "question": "台湾原住民跟靖国神社有什么纠葛？",
+    "type": "local",
+    "expected_segment_indexes": [
+      13,
+      14
+    ],
+    "expected_answer_points": [
+      "一些被强迫当日本兵的台湾原住民名字也被写进靖国神社",
+      "原住民后代自己花钱去日本打官司抗议，要求撤掉祖先名字",
+      "日本态度强硬，这相当于二次殖民、二次羞辱"
+    ],
+    "reference_answer": "我国台湾省有一些被强迫当日本兵的原住民，名字也被写进了靖国神社。原住民后代想方设法自己花钱去日本打官司抗议，要求把祖先的名字从这个可耻的地方撤掉，但日本的态度相当强硬——这相当于二次殖民、二次羞辱。"
+  },
+  {
+    "id": "llm-01",
+    "video": "LLM到Skills",
+    "question": "视频里列了几个主流大模型的上下文窗口，分别有多大？",
+    "type": "local",
+    "expected_segment_indexes": [
+      10
+    ],
+    "expected_answer_points": [
+      "GPT-5.4的context window是105万token",
+      "Gemini 3.1 Pro是100万token",
+      "Claude Opus 4.6是100万token",
+      "100万token约等于150万个汉字，能装下哈利波特全集"
+    ],
+    "reference_answer": "视频列举了主流大模型的上下文窗口：GPT-5.4的context window是105万token，Gemini 3.1 Pro是100万token，Claude Opus 4.6也是100万token。按一个token约等于1.5个汉字算，100万token差不多就是150万个汉字，整个哈利波特全集都能装下。"
+  },
+  {
+    "id": "llm-02",
+    "video": "LLM到Skills",
+    "question": "一个token大概相当于几个字啊？",
+    "type": "local",
+    "expected_segment_indexes": [
+      7
+    ],
+    "expected_answer_points": [
+      "平均一个token约等于0.75个英文单词",
+      "约等于1.5到2个汉字",
+      "40万token大概是60到80万汉字或30万英文单词"
+    ],
+    "reference_answer": "平均来讲，一个token大约等于0.75个英文单词，或者1.5到2个汉字。比如40万个token，大概就是60到80万个汉字，或者30万个英文单词。"
+  },
+  {
+    "id": "llm-03",
+    "video": "LLM到Skills",
+    "question": "视频里拿\"程序员\"这个词和英文单词helpful举例，是想说明什么？这部分在哪？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      6,
+      7
+    ],
+    "expected_answer_points": [
+      "说明token和词并不是一一对应的关系",
+      "程序员被切成\"程序\"和\"员\"两个token",
+      "helpful被拆成help和ful两个token，甚至一个字符可能要多个token"
+    ],
+    "reference_answer": "这两个例子是为了说明词和token并没有明确的一对一关系，token是模型自己学会的一套文本切分规则。“程序员”这种完整的词在tokenizer里被切成了“程序”和“员”两个token；英文单词helpful也被拆成help和ful两个token，甚至一个字符（如对勾）可能需要三个token来表示。"
+  },
+  {
+    "id": "llm-04",
+    "video": "LLM到Skills",
+    "question": "在Claude Code里存一个Agent Skill，文件放哪、叫什么名字有什么讲究？",
+    "type": "local",
+    "expected_segment_indexes": [
+      27,
+      28
+    ],
+    "expected_answer_points": [
+      "要存到用户目录下的.claude/skills文件夹",
+      "文件夹名字必须和Agent Skill的名字相同",
+      "文件名必须是SKILL.md且SKILL大写，起别的名字系统不认"
+    ],
+    "reference_answer": "以Claude Code为例，要把Agent Skill存到用户目录下的.claude/skills文件夹里。存放有两条硬性规定：第一，要在该目录下新建一个文件夹，文件夹名字必须与Agent Skill的名字相同；第二，文件夹里的文件必须命名为SKILL.md且SKILL大写，随便起别的名字系统绝对不会认。"
+  },
+  {
+    "id": "llm-05",
+    "video": "LLM到Skills",
+    "question": "大模型自己又没有记忆，它是怎么记住我前面聊过的东西的？",
+    "type": "global",
+    "expected_segment_indexes": [
+      8,
+      9
+    ],
+    "expected_answer_points": [
+      "大模型本质只是数学函数，本身没有记忆",
+      "每次发消息时程序会把之前的整段对话历史一起发给模型",
+      "这就是context（上下文），是模型每次处理任务时接收的信息总和，可看作临时记忆体"
+    ],
+    "reference_answer": "大模型本质上只是一个数学函数，给输入就出输出，并不像人一样真的有记忆。它之所以“记得”之前聊过的内容，是因为每次发消息时，背后的程序会自动把之前的整段对话历史找出来，连同新问题一起发给模型。这就引出了context（上下文）的概念——模型每次处理任务时接收到的信息总和，可以把它看作大模型的临时记忆体。"
+  },
+  {
+    "id": "llm-06",
+    "video": "LLM到Skills",
+    "question": "视频里说大模型其实不能真正自己去调用工具，那是谁在调？这个说法在哪段讲的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      17,
+      18,
+      19
+    ],
+    "expected_answer_points": [
+      "大模型唯一的能力是输出文本，只能生成调用工具的指令",
+      "平台接收指令后真正调用工具对应的函数",
+      "平台拿到结果再返回给大模型，由模型归纳总结成人话输出"
+    ],
+    "reference_answer": "视频在讲工具调用流程时说明：大模型唯一的能力就是输出文本，它无法自己调用工具，只能生成一条调用工具的指令发给平台。平台接收到指令后真正调用工具背后对应的函数，拿到结果后再返回给大模型，由大模型把结果归纳总结成一句人话输出给用户。"
+  },
+  {
+    "id": "llm-07",
+    "video": "LLM到Skills",
+    "question": "这个视频从头到尾搭了一套AI概念体系，能说说都讲了哪些层吗？",
+    "type": "global",
+    "expected_segment_indexes": [
+      30,
+      31,
+      32
+    ],
+    "expected_answer_points": [
+      "LLM是核心，token是处理数据的基本单元，context是信息总和，context window是容量上限",
+      "prompt分user prompt和system prompt",
+      "tool是感知和影响外部环境的函数，MCP统一工具接入标准",
+      "agent能自主规划调用工具，agent skill是给agent看的说明文档"
+    ],
+    "reference_answer": "视频最后回顾了整套体系：LLM（大模型）是所有AI技术的核心；token是它处理数据的最基本单元；context是它每次处理任务时接收到的信息总和，可看作临时记忆体；context window是context最多能容纳的token量；prompt分user prompt和system prompt两大类；tool是大模型感知和影响外部环境的函数；MCP是统一工具接入格式的标准协议；agent是能自主规划、自主调用工具直至解决用户问题的程序；agent skill则是给agent看的、规定做事步骤和规则的说明文档。"
+  },
+  {
+    "id": "phone-01",
+    "video": "产品评测",
+    "question": "用了9个月之后，哪台手机系统里显示的电池健康度掉得最多？掉到多少了？",
+    "type": "local",
+    "expected_segment_indexes": [
+      5
+    ],
+    "expected_answer_points": [
+      "iPhone 17 电池健康度最低",
+      "只剩94%",
+      "充电循环约304次"
+    ],
+    "reference_answer": "电池健康度掉得最多的是iPhone 17，只剩94%，系统显示充电循环约304次，是11台手机里健康度最低的。"
+  },
+  {
+    "id": "phone-02",
+    "video": "产品评测",
+    "question": "在新的6.0续航模型下，这11台自用机里续航最短的是哪台？具体能撑多久？",
+    "type": "local",
+    "expected_segment_indexes": [
+      10
+    ],
+    "expected_answer_points": [
+      "续航最短的是iPhone",
+      "只有3小时25分钟",
+      "对比全新零售机下降超过17%"
+    ],
+    "reference_answer": "在新的6.0续航模型下，11台自用机里续航最短的是iPhone，只有3小时25分钟。对比几乎全新的零售机，它的续航下降超过17%，足足少了44分钟，这也和电池健康度排名对得上。"
+  },
+  {
+    "id": "phone-03",
+    "video": "产品评测",
+    "question": "谁的手机存储用得最狠？用了多少空间？",
+    "type": "local",
+    "expected_segment_indexes": [
+      4
+    ],
+    "expected_answer_points": [
+      "vivo的存储剩余最少",
+      "使用量高达470GB",
+      "占用92%，接近满载"
+    ],
+    "reference_answer": "存储用得最狠的是vivo，使用量高达470GB，占用92%，是11台手机里剩余空间最少的，快要接近满载了。"
+  },
+  {
+    "id": "phone-04",
+    "video": "产品评测",
+    "question": "视频里提到11台手机里只有一台出现了烧屏痕迹，这个内容是在哪一段说的？具体是哪台手机、怎么烧的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      26
+    ],
+    "expected_answer_points": [
+      "OPPO Find X9",
+      "11台自用机中唯一有烧屏痕迹的",
+      "机主长时间最高亮度使用同一款软件导致"
+    ],
+    "reference_answer": "这在视频收集各机主使用体验的一段。唯一出现烧屏痕迹的是OPPO Find X9，原因是机主总是长时间以最高亮度使用同一款软件导致的，视频也提醒大家注意这种情况。"
+  },
+  {
+    "id": "phone-05",
+    "video": "产品评测",
+    "question": "有个机主为了给手机散热，在手机和背板之间塞了块均热板，这个细节出自视频哪个部分？视频是怎么评价这个操作的？",
+    "type": "segment",
+    "expected_segment_indexes": [
+      28
+    ],
+    "expected_answer_points": [
+      "iPhone机主",
+      "iPhone散热不行、容易发热降亮度",
+      "评价为心理作用大于实际作用"
+    ],
+    "reference_answer": "这出自iPhone机主的使用体验反馈。因为iPhone散热不行、很容易发热，发热之后就降亮度，机主为了散热甚至在手机壳和背板之间放了一块均热板。视频评价这个操作完全是心理作用大于实际作用。"
+  },
+  {
+    "id": "phone-06",
+    "video": "产品评测",
+    "question": "整体来看，手机用久了主要哪些地方会变差？视频给了什么延长手机寿命的建议？",
+    "type": "global",
+    "expected_segment_indexes": [
+      29
+    ],
+    "expected_answer_points": [
+      "衰减最明显的是续航和性能",
+      "劣化程度与个人使用习惯正相关",
+      "减少机身高温使用场景、充电或玩游戏时加散热措施",
+      "保持良好充电习惯，避免过充过放"
+    ],
+    "reference_answer": "用久之后衰减最明显的主要是续航和性能，手机的劣化程度跟个人使用情况正相关，高温还会加速电池损耗。视频的建议是：减少机身高温下的使用场景，充电或玩游戏时加点散热措施；保持良好的充电习惯，尽量不要过充过放。"
+  },
+  {
+    "id": "phone-07",
+    "video": "产品评测",
+    "question": "这个视频最后评奖环节，哪些手机在长时间使用后综合表现比较受认可？",
+    "type": "global",
+    "expected_segment_indexes": [
+      30
+    ],
+    "expected_answer_points": [
+      "续航耐用奖：红米K90 Pro Max、小米17、iQOO 15、真我GT8 Pro",
+      "性能耐用奖：努比亚Z80 Ultra、iQOO 15、荣耀Magic8、华为Mate80",
+      "流畅度耐用奖：华为Mate80、iPhone 17、iQOO 15、vivo X300",
+      "综合体验好评奖：真我GT8 Pro、红米K90 Pro Max、一加15、华为Mate80"
+    ],
+    "reference_answer": "视频最后以颁奖方式总结：续航耐用奖颁给红米K90 Pro Max、小米17、iQOO 15、真我GT8 Pro；性能耐用奖颁给努比亚Z80 Ultra、iQOO 15、荣耀Magic8、华为Mate80；流畅度耐用奖颁给华为Mate80、iPhone 17、iQOO 15、vivo X300；整机综合体验好评奖颁给真我GT8 Pro、红米K90 Pro Max、一加15、华为Mate80。"
+  },
+  {
+    "id": "cross-01",
+    "video": "跨视频",
+    "question": "波士顿圆脸2里说高市早苗这次没亲自去参拜是怕给美国添麻烦，美国当时摊上什么事了？",
+    "type": "cross",
+    "expected_segment_indexes": [
+      {
+        "video": "波士顿圆脸2",
+        "indexes": [
+          9
+        ]
+      },
+      {
+        "video": "波士顿圆脸",
+        "indexes": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "expected_answer_points": [
+      "美国深陷伊朗战事，还要应对中期选举",
+      "林肯号航母水兵因250天超期部署精神崩溃甚至想跳海，闹得很丑",
+      "日元贬值问题上特朗普说要帮日本但没拉住，高市不想这时发癫添乱"
+    ],
+    "reference_answer": "高市早苗没亲自去参拜，是因为不想在这时候给美国添麻烦：当时美国深陷伊朗战事，林肯号航母上的水兵因250天超期部署精神崩溃、甚至闹到想跳海，搞得非常难看；同时日元贬值问题上特朗普说要拉日本一把却没拉住，美国又面临中期选举，高市不想在这节骨眼上“发癫”添乱。"
+  },
+  {
+    "id": "cross-02",
+    "video": "跨视频",
+    "question": "特朗普在这两个视频里都被提到了，他在这两件事里分别是什么角色？",
+    "type": "cross",
+    "expected_segment_indexes": [
+      {
+        "video": "波士顿圆脸",
+        "indexes": [
+          0,
+          8,
+          9
+        ]
+      },
+      {
+        "video": "波士顿圆脸2",
+        "indexes": [
+          9
+        ]
+      }
+    ],
+    "expected_answer_points": [
+      "在林肯号事件中：士兵被当耗材是为了特朗普侵略伊朗的战略，且没人敢向他汇报\"手里没牌了\"",
+      "在靖国神社事件中：特朗普承诺帮日本应对日元贬值但没帮成，又面临中期选举",
+      "两个视频都反映出美国多线透支、力不从心的状态"
+    ],
+    "reference_answer": "在林肯号事件中，士兵被当耗材一样超期部署，是为了特朗普侵略伊朗的战略，而且海军将领没人敢向特朗普汇报“手里没牌了”，只能往下压。在靖国神社事件中，特朗普承诺帮日本应对日元贬值却没帮成，自己又面临中期选举。两个视频里的他都处于美国多线透支、力不从心的位置。"
+  },
+  {
+    "id": "oos-01",
+    "video": null,
+    "question": "特斯拉的FSD自动驾驶现在到底靠不靠谱？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-02",
+    "video": null,
+    "question": "红烧肉怎么做才能肥而不腻、入口即化？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-03",
+    "video": null,
+    "question": "科比职业生涯一共得了多少分？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-04",
+    "video": null,
+    "question": "猫咪绝育手术前需要注意什么？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-05",
+    "video": null,
+    "question": "2026年世界杯是在哪几个国家办的？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-06",
+    "video": null,
+    "question": "北京到上海坐高铁大概要几个小时？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-07",
+    "video": null,
+    "question": "零基础学钢琴应该先练什么曲子？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  },
+  {
+    "id": "oos-08",
+    "video": null,
+    "question": "房贷利率里的LPR是怎么定价的？",
+    "type": "oos",
+    "expected_segment_indexes": [],
+    "expected_answer_points": [],
+    "reference_answer": ""
+  }
+]

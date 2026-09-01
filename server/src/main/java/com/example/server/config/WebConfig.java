@@ -38,6 +38,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/media/**", "/analysis/**", "/admin/**", "/user/logout");
+                .addPathPatterns("/media/**", "/analysis/**", "/admin/**", "/kg/**", "/user/logout")
+                .excludePathPatterns("/media/cover");  // <img> 无法带 Authorization 头，端点内手动鉴权
     }
 }

@@ -13,3 +13,21 @@ redis/data/
 qdrant/data/
 minio/data/
  
+.external-research/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# Java
+server/target/
+*.jar
+
+# Logs
+logs/
+*.log
+ai-service/logs/

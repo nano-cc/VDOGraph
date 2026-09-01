@@ -44,15 +44,21 @@ public class ChunkUploadService {
     private final RedissonClient redissonClient;
     private final MinioUtils minioUtils;
     private final MediaService mediaService;
+    private final KgBuildService kgBuildService;
+    private final com.example.server.service.MediaVisualsService mediaVisualsService;
 
     public ChunkUploadService(StringRedisTemplate redisTemplate,
                               RedissonClient redissonClient,
                               MinioUtils minioUtils,
-                              MediaService mediaService) {
+                              MediaService mediaService,
+                              KgBuildService kgBuildService,
+                              com.example.server.service.MediaVisualsService mediaVisualsService) {
         this.redisTemplate = redisTemplate;
         this.redissonClient = redissonClient;
         this.minioUtils = minioUtils;
         this.mediaService = mediaService;
+        this.kgBuildService = kgBuildService;
+        this.mediaVisualsService = mediaVisualsService;
     }
 
     public String initialize(String filename, int totalChunks, Long userId) throws IOException {
@@ -150,6 +156,9 @@ public class ChunkUploadService {
                 redisTemplate.opsForValue().set(
                         completedKey(uploadId), String.valueOf(mediaFile.getId()), 1, TimeUnit.DAYS);
                 cleanup(uploadId, totalChunks, mediaFile.getId());
+                // 分片上传完成，自动触发知识图谱构建（异步）
+                kgBuildService.triggerBuild(mediaFile.getId(), fileUrl, mediaFile.getUserId());
+                mediaVisualsService.enrich(mediaFile.getId(), fileUrl);
                 return mediaFile;
             } finally {
                 Files.deleteIfExists(mergedFile);

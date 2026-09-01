@@ -28,10 +28,11 @@ public class OcrUtils {
         Path output = null;
         try {
             output = Files.createTempFile("dovideo-ocr-", ".txt");
+            // 使用输出文件而不是 stdout，避免 stderr 混入
+            String outputBase = output.toString().replace(".txt", "");
             process = new ProcessBuilder(
-                    ocrCommand, image.getAbsolutePath(), "stdout", "-l", "chi_sim+eng")
-                    .redirectErrorStream(true)
-                    .redirectOutput(output.toFile())
+                    ocrCommand, image.getAbsolutePath(), outputBase, "-l", "chi_sim+eng")
+                    .redirectError(ProcessBuilder.Redirect.DISCARD)  // 丢弃 stderr
                     .start();
             if (!process.waitFor(2, TimeUnit.MINUTES)) {
                 process.destroyForcibly();

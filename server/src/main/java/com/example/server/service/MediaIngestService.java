@@ -1,55 +1,105 @@
 package com.example.server.service;
 
+import com.example.server.dto.UrlImportMsg;
 import com.example.server.entity.MediaFile;
 import com.example.server.utils.MinioUtils;
-import com.example.server.utils.YtDlpUtils;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Service
 public class MediaIngestService {
 
     private static final Logger log = LoggerFactory.getLogger(MediaIngestService.class);
+    /** 同一用户同一 URL 的判重窗口（双击/重试秒回，对齐 quickHash 秒传的体验） */
+    private static final String URL_DEDUP_PREFIX = "url:import:dedup:";
+    private static final Duration URL_DEDUP_TTL = Duration.ofHours(24);
 
     private final MinioUtils minioUtils;
-    private final YtDlpUtils ytDlpUtils;
     private final MediaService mediaService;
+    private final KgBuildService kgBuildService;
+    private final com.example.server.service.MediaVisualsService mediaVisualsService;
+    private final RocketMQTemplate rocketMQTemplate;
+    private final StringRedisTemplate redisTemplate;
+    private final UrlImportStatusService importStatusService;
+    private final String urlImportTopic;
 
     public MediaIngestService(MinioUtils minioUtils,
-                              YtDlpUtils ytDlpUtils,
-                              MediaService mediaService) {
+                              MediaService mediaService,
+                              KgBuildService kgBuildService,
+                              RocketMQTemplate rocketMQTemplate,
+                              StringRedisTemplate redisTemplate,
+                              UrlImportStatusService importStatusService,
+                              com.example.server.service.MediaVisualsService mediaVisualsService,
+                              @Value("${rocketmq.topic.url-import:url-import}") String urlImportTopic) {
         this.minioUtils = minioUtils;
-        this.ytDlpUtils = ytDlpUtils;
         this.mediaService = mediaService;
+        this.kgBuildService = kgBuildService;
+        this.mediaVisualsService = mediaVisualsService;
+        this.rocketMQTemplate = rocketMQTemplate;
+        this.redisTemplate = redisTemplate;
+        this.importStatusService = importStatusService;
+        this.urlImportTopic = urlImportTopic;
     }
 
     public MediaFile ingestFile(MultipartFile file, Long userId) throws Exception {
         if (file == null || file.isEmpty()) throw new IllegalArgumentException("上传文件不能为空");
 
         String filename = mediaService.normalizeVideoFilename(file.getOriginalFilename());
-        String md5 = mediaService.calculateMd5(file);
+        String quickHash = mediaService.calculateQuickHash(file);
         String fileUrl = minioUtils.uploadFile(file);
-        return mediaService.saveUploadedMedia(filename, fileUrl, userId, md5);
+        MediaFile mediaFile = mediaService.saveUploadedMedia(filename, fileUrl, userId, quickHash);
+        // 上传完成自动触发知识图谱构建（异步）
+        kgBuildService.triggerBuild(mediaFile.getId(), fileUrl, mediaFile.getUserId());
+        mediaVisualsService.enrich(mediaFile.getId(), fileUrl);
+        return mediaFile;
     }
 
-    public MediaFile ingestUrl(String url, Long userId) throws Exception {
+    /**
+     * URL 视频导入（异步化：创建占位 + 发 MQ 即返回，下载/校验/判重在 UrlImportConsumer 执行）
+     * 返回 PROCESSING 占位记录；前端按 /media/import-status 轮询推进
+     */
+    public MediaFile ingestUrl(String url, Long userId) {
         if (url == null || url.isBlank()) throw new IllegalArgumentException("视频链接不能为空");
 
-        File tempFile = null;
-        try {
-            tempFile = ytDlpUtils.downloadVideo(url);
-            String md5 = mediaService.calculateMd5(tempFile);
-            String fileUrl = minioUtils.uploadLocalFile(tempFile);
-            return mediaService.saveUploadedMedia("WEB_" + tempFile.getName(), fileUrl, userId, md5);
-        } finally {
-            // 这份文件只是搬运工，进了 MinIO 就别继续占着本地磁盘了。
-            if (tempFile != null && tempFile.exists() && !tempFile.delete()) {
-                log.warn("temporary_video_cleanup_failed path={}", tempFile.getAbsolutePath());
+        // L1：同一用户同一 URL 判重（24h 窗口内直接复用进行中的/已完成的记录）
+        String urlDedupKey = URL_DEDUP_PREFIX + userId + ":"
+                + DigestUtils.md5DigestAsHex(url.getBytes(StandardCharsets.UTF_8));
+        String existingId = redisTemplate.opsForValue().get(urlDedupKey);
+        if (existingId != null) {
+            MediaFile existing = mediaService.findById(Long.valueOf(existingId));
+            // 已完成或进行中才复用；失败的占位不复用（允许用户重试）
+            if (existing != null && ("COMPLETED".equals(existing.getStatus())
+                    || "PROCESSING".equals(existing.getStatus()))) {
+                log.info("url_import_dedup_hit userId={} mediaId={}", userId, existing.getId());
+                return existing;
             }
         }
+
+        String host = URI.create(url).getHost();
+        // 占位文件名带 .mp4 后缀（normalizeVideoFilename 有扩展名校验；最终文件名下载完成后回填）
+        MediaFile placeholder = mediaService.createImportPlaceholder(
+                "WEB_" + (host != null ? host : "url") + ".mp4", userId);
+        importStatusService.mark(placeholder.getId(), "DOWNLOADING", "导入任务已排队");
+        try {
+            rocketMQTemplate.convertAndSend(urlImportTopic,
+                    new UrlImportMsg(placeholder.getId(), url, userId, 1));
+            redisTemplate.opsForValue().set(urlDedupKey, String.valueOf(placeholder.getId()), URL_DEDUP_TTL);
+            log.info("url_import_dispatched mediaId={} host={}", placeholder.getId(), host);
+        } catch (RuntimeException e) {
+            mediaService.failUrlImport(placeholder);
+            importStatusService.mark(placeholder.getId(), "FAILED", "导入任务投递失败，请重试");
+            throw new IllegalStateException("导入任务投递失败", e);
+        }
+        return placeholder;
     }
 }

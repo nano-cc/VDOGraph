@@ -1,0 +1,1660 @@
+{
+  "canonical_relationships": [
+    {
+      "id": "rel_entity_中国人_entity_全国牛肉批发价",
+      "source_entity_id": "entity_中国人",
+      "target_entity_id": "entity_全国牛肉批发价",
+      "source_entity_name": "中国人",
+      "target_entity_name": "全国牛肉批发价",
+      "description": "中国人民受牛肉价格上涨影响，消费负担加重",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉配额制_entity_进口牛肉",
+      "source_entity_id": "entity_进口牛肉配额制",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "进口牛肉配额制",
+      "target_entity_name": "进口牛肉",
+      "description": "配额制限制了进口牛肉数量，影响市场供应",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_国家_entity_进口牛肉配额制",
+      "source_entity_id": "entity_国家",
+      "target_entity_id": "entity_进口牛肉配额制",
+      "source_entity_name": "国家",
+      "target_entity_name": "进口牛肉配额制",
+      "description": "中国政府制定并实施了进口牛肉配额政策",
+      "strength": 10,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_澳大利亚_entity_进口牛肉配额制",
+      "source_entity_id": "entity_澳大利亚",
+      "target_entity_id": "entity_进口牛肉配额制",
+      "source_entity_name": "澳大利亚",
+      "target_entity_name": "进口牛肉配额制",
+      "description": "澳大利亚作为进口国受配额限制，上半年配额已用完",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_电商平台_entity_进口牛肉",
+      "source_entity_id": "entity_电商平台",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "电商平台",
+      "target_entity_name": "进口牛肉",
+      "description": "电商平台曾销售低价进口牛肉",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_社交媒体_entity_牛肉自由",
+      "source_entity_id": "entity_社交媒体",
+      "target_entity_id": "entity_牛肉自由",
+      "source_entity_name": "社交媒体",
+      "target_entity_name": "牛肉自由",
+      "description": "社交媒体上曾传播'牛肉自由'概念",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_0",
+          "segment_index": 0
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_澳大利亚_entity_牛肉",
+      "source_entity_id": "entity_澳大利亚",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "澳大利亚",
+      "target_entity_name": "牛肉",
+      "description": "Australia is subject to a 55% tariff increase on beef exports to China starting June 20",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_巴西_entity_牛肉",
+      "source_entity_id": "entity_巴西",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "巴西",
+      "target_entity_name": "牛肉",
+      "description": "Brazil's beef import quota to China is reported to be 80% consumed",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_牛肉",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "中国",
+      "target_entity_name": "牛肉",
+      "description": "China is the market where beef prices are rising and import restrictions are being analyzed",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_肉牛养殖产业",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_肉牛养殖产业",
+      "source_entity_name": "中国",
+      "target_entity_name": "肉牛养殖产业",
+      "description": "China's domestic cattle farming industry has been experiencing significant losses, especially from 2023 onward",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养殖户_entity_肉牛养殖产业",
+      "source_entity_id": "entity_养殖户",
+      "target_entity_id": "entity_肉牛养殖产业",
+      "source_entity_name": "养殖户",
+      "target_entity_name": "肉牛养殖产业",
+      "description": "Cattle farmers are part of the domestic beef industry, with many incurring losses per head of cattle",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_关税_entity_牛肉",
+      "source_entity_id": "entity_关税",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "关税",
+      "target_entity_name": "牛肉",
+      "description": "Tariffs are imposed on beef imports, affecting prices and market dynamics",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉配额制_entity_牛肉",
+      "source_entity_id": "entity_进口牛肉配额制",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "进口牛肉配额制",
+      "target_entity_name": "牛肉",
+      "description": "Import quotas limit the amount of beef that can be imported, influencing supply and prices",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_全国牛肉批发价_entity_牛肉",
+      "source_entity_id": "entity_全国牛肉批发价",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "全国牛肉批发价",
+      "target_entity_name": "牛肉",
+      "description": "Beef prices are directly impacted by factors like import restrictions and domestic production issues",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_1",
+          "segment_index": 1
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_疯牛病_entity_进口牛肉",
+      "source_entity_id": "entity_疯牛病",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "疯牛病",
+      "target_entity_name": "进口牛肉",
+      "description": "Mad cow disease led to China banning beef imports from affected regions, restricting import growth until 2013 when bans were lifted as the disease declined.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_2",
+          "segment_index": 2
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉_entity_全国牛肉批发价",
+      "source_entity_id": "entity_进口牛肉",
+      "target_entity_id": "entity_全国牛肉批发价",
+      "source_entity_name": "进口牛肉",
+      "target_entity_name": "全国牛肉批发价",
+      "description": "Large volumes of cheap imported beef have been a major reason for lower beef prices in China in recent years.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_2",
+          "segment_index": 2
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_走私牛肉_entity_进口牛肉",
+      "source_entity_id": "entity_走私牛肉",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "走私牛肉",
+      "target_entity_name": "进口牛肉",
+      "description": "Smuggled beef emerged as an illegal alternative during the period when beef imports were banned due to mad cow disease concerns.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_2",
+          "segment_index": 2
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_进口牛肉",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "中国",
+      "target_entity_name": "进口牛肉",
+      "description": "China is the country importing beef, with import volumes growing rapidly from 2013, significantly impacting its domestic market and consumption patterns.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_2",
+          "segment_index": 2
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_疯牛病_entity_中国",
+      "source_entity_id": "entity_疯牛病",
+      "target_entity_id": "entity_中国",
+      "source_entity_name": "疯牛病",
+      "target_entity_name": "中国",
+      "description": "China implemented a ban on beef imports from regions affected by mad cow disease to prevent health risks, shaping its import policies for over a decade.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_2",
+          "segment_index": 2
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_非洲猪瘟_entity_养殖户",
+      "source_entity_id": "entity_非洲猪瘟",
+      "target_entity_id": "entity_养殖户",
+      "source_entity_name": "非洲猪瘟",
+      "target_entity_name": "养殖户",
+      "description": "African swine fever in 2018 increased beef consumption, prompting cattle farmers to invest more in raising cattle.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_3",
+          "segment_index": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉_entity_肉牛养殖产业",
+      "source_entity_id": "entity_进口牛肉",
+      "target_entity_id": "entity_肉牛养殖产业",
+      "source_entity_name": "进口牛肉",
+      "target_entity_name": "肉牛养殖产业",
+      "description": "Cheap imported beef from Brazil lowered beef prices, causing losses in the domestic cattle farming industry.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_3",
+          "segment_index": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养殖户_entity_中国牛存栏量",
+      "source_entity_id": "entity_养殖户",
+      "target_entity_id": "entity_中国牛存栏量",
+      "source_entity_name": "养殖户",
+      "target_entity_name": "中国牛存栏量",
+      "description": "Cattle farmers increased investment, raising China's cattle inventory to over 100 million heads, contributing to oversupply.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_3",
+          "segment_index": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国牛存栏量_entity_肉牛养殖产业",
+      "source_entity_id": "entity_中国牛存栏量",
+      "target_entity_id": "entity_肉牛养殖产业",
+      "source_entity_name": "中国牛存栏量",
+      "target_entity_name": "肉牛养殖产业",
+      "description": "High cattle inventory led to oversupply, exacerbating losses in the domestic cattle farming industry.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_3",
+          "segment_index": 3
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养殖户_entity_进口牛肉",
+      "source_entity_id": "entity_养殖户",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "养殖户",
+      "target_entity_name": "进口牛肉",
+      "description": "养牛户 are negatively affected by 进口牛肉 due to financial losses from market competition, as cheap imports undercut domestic beef prices.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_商务部_entity_进口牛肉",
+      "source_entity_id": "entity_商务部",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "商务部",
+      "target_entity_name": "进口牛肉",
+      "description": "商务部 investigated the impact of 进口牛肉 starting in 2024 to assess and address its effects on the domestic cattle industry.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_配额政策",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_配额政策",
+      "source_entity_name": "中国",
+      "target_entity_name": "配额政策",
+      "description": "中国 implemented the 配额政策 in 2025 to regulate beef imports and protect the domestic cattle farming industry while considering consumer needs.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_配额政策_entity_关税",
+      "source_entity_id": "entity_配额政策",
+      "target_entity_id": "entity_关税",
+      "source_entity_name": "配额政策",
+      "target_entity_name": "关税",
+      "description": "配额政策 includes 关税 as a measure, with tariffs applied to imports exceeding the quota to align prices with domestic beef and support local industry.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_老百姓_entity_进口牛肉",
+      "source_entity_id": "entity_老百姓",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "老百姓",
+      "target_entity_name": "进口牛肉",
+      "description": "老百姓 desire affordable 进口牛肉, creating consumer pressure that influences policy decisions on quotas and tariffs to balance affordability and industry protection.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛大省_entity_牛肉",
+      "source_entity_id": "entity_养牛大省",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "养牛大省",
+      "target_entity_name": "牛肉",
+      "description": "养牛大省 are regions heavily reliant on 国内牛肉 production, where the industry's health directly affects local employment and economic stability.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_农产品工业化",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_农产品工业化",
+      "source_entity_name": "中国",
+      "target_entity_name": "农产品工业化",
+      "description": "中国 excels at 农产品工业化, successfully lowering prices for products like pork and chicken, though this approach has not yet fully reduced beef prices.",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_4",
+          "segment_index": 4
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国人_entity_猪肉",
+      "source_entity_id": "entity_中国人",
+      "target_entity_id": "entity_猪肉",
+      "source_entity_name": "中国人",
+      "target_entity_name": "猪肉",
+      "description": "Chinese people primarily consume pork as a major meat source.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国人_entity_禽肉",
+      "source_entity_id": "entity_中国人",
+      "target_entity_id": "entity_禽肉",
+      "source_entity_name": "中国人",
+      "target_entity_name": "禽肉",
+      "description": "Chinese people also consume poultry meat as a significant part of their diet.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国人_entity_牛肉",
+      "source_entity_id": "entity_中国人",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "中国人",
+      "target_entity_name": "牛肉",
+      "description": "Chinese people consume beef, but it constitutes a smaller portion of their meat intake compared to pork and poultry.",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_全国肉类总产量_entity_猪肉",
+      "source_entity_id": "entity_全国肉类总产量",
+      "target_entity_id": "entity_猪肉",
+      "source_entity_name": "全国肉类总产量",
+      "target_entity_name": "猪肉",
+      "description": "Pork makes up nearly 60% of China's total meat production.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_全国肉类总产量_entity_禽肉",
+      "source_entity_id": "entity_全国肉类总产量",
+      "target_entity_id": "entity_禽肉",
+      "source_entity_name": "全国肉类总产量",
+      "target_entity_name": "禽肉",
+      "description": "Poultry meat accounts for close to 30% of China's total meat production.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_全国肉类总产量_entity_牛肉",
+      "source_entity_id": "entity_全国肉类总产量",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "全国肉类总产量",
+      "target_entity_name": "牛肉",
+      "description": "Beef constitutes a smaller portion, 8.01 million tons, of China's total meat production.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养猪_entity_26层的养猪场",
+      "source_entity_id": "entity_养猪",
+      "target_entity_id": "entity_26层的养猪场",
+      "source_entity_name": "养猪",
+      "target_entity_name": "26层的养猪场",
+      "description": "Pig farming utilizes industrialized infrastructure like 26-story pig farms to achieve high output.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养鸡_entity_建筑面积12万平方米的养鸡场",
+      "source_entity_id": "entity_养鸡",
+      "target_entity_id": "entity_建筑面积12万平方米的养鸡场",
+      "source_entity_name": "养鸡",
+      "target_entity_name": "建筑面积12万平方米的养鸡场",
+      "description": "Chicken farming operates on a large scale in facilities such as 120,000-square-meter chicken farms.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养猪_entity_养猪的上市公司",
+      "source_entity_id": "entity_养猪",
+      "target_entity_id": "entity_养猪的上市公司",
+      "source_entity_name": "养猪",
+      "target_entity_name": "养猪的上市公司",
+      "description": "Pig farming has led to the existence of publicly listed companies in this sector.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养鸡_entity_养猪的上市公司",
+      "source_entity_id": "entity_养鸡",
+      "target_entity_id": "entity_养猪的上市公司",
+      "source_entity_name": "养鸡",
+      "target_entity_name": "养猪的上市公司",
+      "description": "Chicken farming has led to the existence of publicly listed companies in this sector.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_养猪的上市公司",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_养猪的上市公司",
+      "source_entity_name": "养牛",
+      "target_entity_name": "养猪的上市公司",
+      "description": "Cattle farming has very few publicly listed companies due to challenges in industrialization.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_母牛",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_母牛",
+      "source_entity_name": "养牛",
+      "target_entity_name": "母牛",
+      "description": "Cattle farming involves breeding female cattle, which have long gestation periods and low birth rates.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_架子牛",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_架子牛",
+      "source_entity_name": "养牛",
+      "target_entity_name": "架子牛",
+      "description": "Cattle farming includes raising young cattle to become '架子牛' before further fattening.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_育肥厂",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_育肥厂",
+      "source_entity_name": "养牛",
+      "target_entity_name": "育肥厂",
+      "description": "Cattle farming utilizes feedlots or '育肥厂' to fatten cattle before slaughter.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_5",
+          "segment_index": 5
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_肉牛_entity_养牛",
+      "source_entity_id": "entity_肉牛",
+      "target_entity_id": "entity_养牛",
+      "source_entity_name": "肉牛",
+      "target_entity_name": "养牛",
+      "description": "肉牛 are the primary product of 养牛 (cattle farming), with a three-year cycle influencing farming economics.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_母猪_entity_养猪",
+      "source_entity_id": "entity_母猪",
+      "target_entity_id": "entity_养猪",
+      "source_entity_name": "母猪",
+      "target_entity_name": "养猪",
+      "description": "母猪 are central to 养猪 (pig farming), enabling rapid reproduction and shorter production cycles.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_小猪_entity_养猪",
+      "source_entity_id": "entity_小猪",
+      "target_entity_id": "entity_养猪",
+      "source_entity_name": "小猪",
+      "target_entity_name": "养猪",
+      "description": "小猪 are raised in 养猪 operations, reaching market weight quickly to reduce capital占用.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_北牛奶运",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "养牛",
+      "target_entity_name": "北牛奶运",
+      "description": "北牛奶运 is an efficient strategy developed for 养牛 in China, optimizing resource use across regions.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_内蒙_entity_北牛奶运",
+      "source_entity_id": "entity_内蒙",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "内蒙",
+      "target_entity_name": "北牛奶运",
+      "description": "内蒙 is used for calf rearing in the 北牛奶运 strategy due to its grassland.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_东北_entity_北牛奶运",
+      "source_entity_id": "entity_东北",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "东北",
+      "target_entity_name": "北牛奶运",
+      "description": "东北 is part of the calf rearing phase in the 北牛奶运 model, leveraging its natural pastures.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_山东_entity_北牛奶运",
+      "source_entity_id": "entity_山东",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "山东",
+      "target_entity_name": "北牛奶运",
+      "description": "山东 is a destination for cattle fattening in the 北牛奶运 strategy, utilizing its grain resources.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_河北_entity_北牛奶运",
+      "source_entity_id": "entity_河北",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "河北",
+      "target_entity_name": "北牛奶运",
+      "description": "河北 exemplifies the 北牛奶运 model, with high cattle inventory and slaughter rates from fattening operations.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_安徽_entity_北牛奶运",
+      "source_entity_id": "entity_安徽",
+      "target_entity_id": "entity_北牛奶运",
+      "source_entity_name": "安徽",
+      "target_entity_name": "北牛奶运",
+      "description": "安徽 serves as a fattening region in the 北牛奶运 strategy, contributing to nationwide supply.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_养猪",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_养猪",
+      "source_entity_name": "养牛",
+      "target_entity_name": "养猪",
+      "description": "养牛 and 养猪 are compared, with 养猪 having faster cycles and lower costs, making it more industrialized in China.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛_entity_养鸡",
+      "source_entity_id": "entity_养牛",
+      "target_entity_id": "entity_养鸡",
+      "source_entity_name": "养牛",
+      "target_entity_name": "养鸡",
+      "description": "养牛 is contrasted with 养鸡, where 养鸡 is more scalable and capital-efficient in the Chinese context.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_6",
+          "segment_index": 6
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_牛肉",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "中国",
+      "target_entity_name": "牛肉",
+      "description": "China produces beef but faces higher costs and lower efficiency compared to other countries, leading to significant imports.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_巴西_entity_牛肉",
+      "source_entity_id": "entity_巴西",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "巴西",
+      "target_entity_name": "牛肉",
+      "description": "Brazil is the largest exporter of beef to China, benefiting from vast natural pastures that lower production costs.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_阿根廷_entity_牛肉",
+      "source_entity_id": "entity_阿根廷",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "阿根廷",
+      "target_entity_name": "牛肉",
+      "description": "Argentina's Pampas grasslands enable highly efficient natural grazing, contributing to its role as a major beef producer.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_美国_entity_牛肉",
+      "source_entity_id": "entity_美国",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "美国",
+      "target_entity_name": "牛肉",
+      "description": "The U.S. uses natural grazing methods and produces cattle with significantly larger average weight than China.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_阿根廷_entity_潘帕斯大草原",
+      "source_entity_id": "entity_阿根廷",
+      "target_entity_id": "entity_潘帕斯大草原",
+      "source_entity_name": "阿根廷",
+      "target_entity_name": "潘帕斯大草原",
+      "description": "Argentina's beef production is heavily supported by the fertile and expansive Pampas grasslands.",
+      "strength": 10,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_精料育肥",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_精料育肥",
+      "source_entity_name": "中国",
+      "target_entity_name": "精料育肥",
+      "description": "China relies on intensive feedlot systems (精料育肥) to raise cattle, increasing production costs.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国人_entity_降成本",
+      "source_entity_id": "entity_中国人",
+      "target_entity_id": "entity_降成本",
+      "source_entity_name": "中国人",
+      "target_entity_name": "降成本",
+      "description": "The Chinese people are noted for their exceptional ability to reduce costs in beef production processes.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_资源禀赋_entity_牛肉",
+      "source_entity_id": "entity_资源禀赋",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "资源禀赋",
+      "target_entity_name": "牛肉",
+      "description": "Differences in resource endowment (like land and climate) explain why countries like Brazil and Argentina have cheaper beef production than China.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_豆粕_entity_牛肉",
+      "source_entity_id": "entity_豆粕",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "豆粕",
+      "target_entity_name": "牛肉",
+      "description": "Soybean meal is a key feed component in cattle farming; its lower cost abroad contributes to cheaper beef production in countries like Brazil and the U.S.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_玉米_entity_牛肉",
+      "source_entity_id": "entity_玉米",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "玉米",
+      "target_entity_name": "牛肉",
+      "description": "Corn is used as cattle feed; its lower price in beef-exporting nations helps reduce overall production costs compared to China.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_7",
+          "segment_index": 7
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_巴西",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_巴西",
+      "source_entity_name": "中国",
+      "target_entity_name": "巴西",
+      "description": "China has higher cattle raising costs compared to Brazil, with China's cost being 2.1 times that of Brazil",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_阿根廷",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_阿根廷",
+      "source_entity_name": "中国",
+      "target_entity_name": "阿根廷",
+      "description": "China has higher cattle raising costs compared to Argentina in the cattle industry",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_美国",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_美国",
+      "source_entity_name": "中国",
+      "target_entity_name": "美国",
+      "description": "China has higher cattle raising costs compared to the United States in the cattle industry",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_澳大利亚",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_澳大利亚",
+      "source_entity_name": "中国",
+      "target_entity_name": "澳大利亚",
+      "description": "China has higher cattle raising costs compared to Australia in the cattle industry",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_山西忻州_entity_西门塔尔牛",
+      "source_entity_id": "entity_山西忻州",
+      "target_entity_id": "entity_西门塔尔牛",
+      "source_entity_name": "山西忻州",
+      "target_entity_name": "西门塔尔牛",
+      "description": "A farmer in Shanxi Xinzhou purchased six Simmental cattle for 90000 RMB in 2020",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养牛产业_entity_成本",
+      "source_entity_id": "entity_养牛产业",
+      "target_entity_id": "entity_成本",
+      "source_entity_name": "养牛产业",
+      "target_entity_name": "成本",
+      "description": "The cattle raising industry in China is characterized by high costs, making it less competitive internationally",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养殖户_entity_中国",
+      "source_entity_id": "entity_养殖户",
+      "target_entity_id": "entity_中国",
+      "source_entity_name": "养殖户",
+      "target_entity_name": "中国",
+      "description": "Cattle farmers in China face high costs and little resistance to competition from foreign cattle",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_8",
+          "segment_index": 8
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_养殖户_entity_东北",
+      "source_entity_id": "entity_养殖户",
+      "target_entity_id": "entity_东北",
+      "source_entity_name": "养殖户",
+      "target_entity_name": "东北",
+      "description": "Farmers in the Northeast region are involved in traditional cattle farming",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_散户_entity_大户",
+      "source_entity_id": "entity_散户",
+      "target_entity_id": "entity_大户",
+      "source_entity_name": "散户",
+      "target_entity_name": "大户",
+      "description": "Small-scale farmers have largely exited, leaving only large-scale farmers operating in the industry",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_牛肉_entity_进口牛肉",
+      "source_entity_id": "entity_牛肉",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "牛肉",
+      "target_entity_name": "进口牛肉",
+      "description": "Imported beef constitutes a significant part of China's beef consumption, especially as frozen meat",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_冻肉_entity_自助餐厅",
+      "source_entity_id": "entity_冻肉",
+      "target_entity_id": "entity_自助餐厅",
+      "source_entity_name": "冻肉",
+      "target_entity_name": "自助餐厅",
+      "description": "Frozen beef is commonly used in buffet restaurants for dishes like beef rolls",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_冻肉_entity_火锅店",
+      "source_entity_id": "entity_冻肉",
+      "target_entity_id": "entity_火锅店",
+      "source_entity_name": "冻肉",
+      "target_entity_name": "火锅店",
+      "description": "Frozen beef is utilized in hot pot restaurants for items such as rib strips",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_配额政策_entity_散户",
+      "source_entity_id": "entity_配额政策",
+      "target_entity_id": "entity_散户",
+      "source_entity_name": "配额政策",
+      "target_entity_name": "散户",
+      "description": "The introduction of quota policies is understood in the context of small farmers exiting cattle farming",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_牛肉自由_entity_牛肉",
+      "source_entity_id": "entity_牛肉自由",
+      "target_entity_id": "entity_牛肉",
+      "source_entity_name": "牛肉自由",
+      "target_entity_name": "牛肉",
+      "description": "The concept of beef freedom relates directly to the affordability and consumption of beef in China",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_9",
+          "segment_index": 9
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_连锁餐_entity_进口牛肉",
+      "source_entity_id": "entity_连锁餐",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "连锁餐",
+      "target_entity_name": "进口牛肉",
+      "description": "Chain restaurants commonly use imported frozen beef for dishes like stir-fried beef.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_潮汕火锅店_entity_鲜切牛肉",
+      "source_entity_id": "entity_潮汕火锅店",
+      "target_entity_id": "entity_鲜切牛肉",
+      "source_entity_name": "潮汕火锅店",
+      "target_entity_name": "鲜切牛肉",
+      "description": "Chaoshan hot pot restaurants are known for serving fresh-cut beef.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_电商平台_entity_进口牛肉",
+      "source_entity_id": "entity_电商平台",
+      "target_entity_id": "entity_进口牛肉",
+      "source_entity_name": "电商平台",
+      "target_entity_name": "进口牛肉",
+      "description": "E-commerce platforms offer imported frozen beef as a cheaper alternative for consumers.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉_entity_南美",
+      "source_entity_id": "entity_进口牛肉",
+      "target_entity_id": "entity_南美",
+      "source_entity_name": "进口牛肉",
+      "target_entity_name": "南美",
+      "description": "Imported frozen beef is sourced from regions like South America.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_进口牛肉_entity_澳大利亚",
+      "source_entity_id": "entity_进口牛肉",
+      "target_entity_id": "entity_澳大利亚",
+      "source_entity_name": "进口牛肉",
+      "target_entity_name": "澳大利亚",
+      "description": "Imported frozen beef also comes from Australia.",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_国产牛肉_entity_进口配额",
+      "source_entity_id": "entity_国产牛肉",
+      "target_entity_id": "entity_进口配额",
+      "source_entity_name": "国产牛肉",
+      "target_entity_name": "进口配额",
+      "description": "Domestic beef availability and pricing are influenced by import quotas on foreign beef.",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_日本_entity_关税",
+      "source_entity_id": "entity_日本",
+      "target_entity_id": "entity_关税",
+      "source_entity_name": "日本",
+      "target_entity_name": "关税",
+      "description": "Japan imposes tariffs, such as 38.5%, on beef imports to protect its domestic industry.",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_日韩_entity_养牛成本",
+      "source_entity_id": "entity_日韩",
+      "target_entity_id": "entity_养牛成本",
+      "source_entity_name": "日韩",
+      "target_entity_name": "养牛成本",
+      "description": "Japan and South Korea have high cattle-raising costs, leading to greater reliance on imports.",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_10",
+          "segment_index": 10
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_韩国_entity_牛肉进口关税",
+      "source_entity_id": "entity_韩国",
+      "target_entity_id": "entity_牛肉进口关税",
+      "source_entity_name": "韩国",
+      "target_entity_name": "牛肉进口关税",
+      "description": "South Korea imposes high import tariffs on beef, keeping them at 40%",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_日韩_entity_养牛产业",
+      "source_entity_id": "entity_日韩",
+      "target_entity_id": "entity_养牛产业",
+      "source_entity_name": "日韩",
+      "target_entity_name": "养牛产业",
+      "description": "The cattle industries in Japan and South Korea are forced to move toward high-end production due to import pressures",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_和牛_entity_日韩",
+      "source_entity_id": "entity_和牛",
+      "target_entity_id": "entity_日韩",
+      "source_entity_name": "和牛",
+      "target_entity_name": "日韩",
+      "description": "Wagyu beef is a high-end product from Japan, part of the premium beef market in Japan and South Korea",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_韩牛_entity_韩国",
+      "source_entity_id": "entity_韩牛",
+      "target_entity_id": "entity_韩国",
+      "source_entity_name": "韩牛",
+      "target_entity_name": "韩国",
+      "description": "Hanwoo beef is a premium Korean beef product, significantly more expensive than imported beef in South Korea",
+      "strength": 8,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_社交媒体_entity_韩国人吃不起牛肉",
+      "source_entity_id": "entity_社交媒体",
+      "target_entity_id": "entity_韩国人吃不起牛肉",
+      "source_entity_name": "社交媒体",
+      "target_entity_name": "韩国人吃不起牛肉",
+      "description": "Social media hosts a persistent topic about Koreans not being able to afford beef",
+      "strength": 7,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_中国_entity_韩国",
+      "source_entity_id": "entity_中国",
+      "target_entity_id": "entity_韩国",
+      "source_entity_name": "中国",
+      "target_entity_name": "韩国",
+      "description": "China may face a similar beef market structure in the future as South Korea",
+      "strength": 6,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_澳大利亚_entity_牛肉进口关税",
+      "source_entity_id": "entity_澳大利亚",
+      "target_entity_id": "entity_牛肉进口关税",
+      "source_entity_name": "澳大利亚",
+      "target_entity_name": "牛肉进口关税",
+      "description": "Australia is a source of beef imports affected by tariff policies, with its quota expected to be used up",
+      "strength": 5,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_巴西_entity_牛肉进口关税",
+      "source_entity_id": "entity_巴西",
+      "target_entity_id": "entity_牛肉进口关税",
+      "source_entity_name": "巴西",
+      "target_entity_name": "牛肉进口关税",
+      "description": "Brazil is a source of beef imports impacted by tariff policies, with its quota also likely to be depleted soon",
+      "strength": 5,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_阿根廷_entity_牛肉进口关税",
+      "source_entity_id": "entity_阿根廷",
+      "target_entity_id": "entity_牛肉进口关税",
+      "source_entity_name": "阿根廷",
+      "target_entity_name": "牛肉进口关税",
+      "description": "Argentina is a source of beef imports influenced by tariff policies, with its quota anticipated to run out quickly",
+      "strength": 5,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    },
+    {
+      "id": "rel_entity_戴老板_entity_本期视频",
+      "source_entity_id": "entity_戴老板",
+      "target_entity_id": "entity_本期视频",
+      "source_entity_name": "戴老板",
+      "target_entity_name": "本期视频",
+      "description": "Dai Laoban is the host of this video, providing industry insights and advice",
+      "strength": 9,
+      "source_count": 1,
+      "sources": [
+        {
+          "segment_id": "media_1_segment_11",
+          "segment_index": 11
+        }
+      ],
+      "status": "active"
+    }
+  ],
+  "duplicate_groups": [],
+  "statistics": {
+    "total": 97,
+    "duplicates": 0,
+    "conflicts": 0,
+    "active": 97
+  }
+}
