@@ -2,6 +2,7 @@ package com.example.server.service;
 
 import com.example.server.client.AiServiceClient;
 import com.example.server.dto.KgAnalyzeMsg;
+import com.example.server.dto.KgCommitMsg;
 import com.example.server.entity.KgBuildTask;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class KgBuildService {
     private final RocketMQTemplate rocketMQTemplate;
     private final KgTaskStateService stateService;
     private final String kgAnalyzeTopic;
+    private final String kgCommitTopic;
 
     @Value("${kg.auto-build:true}")
     private boolean autoBuild;
@@ -40,12 +42,14 @@ public class KgBuildService {
                           @Qualifier("aiTaskExecutor") ThreadPoolTaskExecutor executor,
                           RocketMQTemplate rocketMQTemplate,
                           KgTaskStateService stateService,
-                          @Value("${rocketmq.topic.kg-analyze:kg-analyze}") String kgAnalyzeTopic) {
+                          @Value("${rocketmq.topic.kg-analyze:kg-analyze}") String kgAnalyzeTopic,
+                          @Value("${rocketmq.topic.kg-commit:kg-commit}") String kgCommitTopic) {
         this.aiServiceClient = aiServiceClient;
         this.executor = executor;
         this.rocketMQTemplate = rocketMQTemplate;
         this.stateService = stateService;
         this.kgAnalyzeTopic = kgAnalyzeTopic;
+        this.kgCommitTopic = kgCommitTopic;
     }
 
     /**
@@ -70,9 +74,9 @@ public class KgBuildService {
                 log.info("KG build already exists mediaId={} status={}, skip", mediaId, status);
                 return;
             }
-            // 失败态复投（走 analyze 重投计数）
+            // 失败态复投（#79 预算判断看 analyze_retry，不看派发计数）
             if (Boolean.FALSE.equals(existing.getRetryable())
-                    || existing.getAnalyzeAttempt() >= MAX_ATTEMPTS) {
+                    || (existing.getAnalyzeRetry() != null && existing.getAnalyzeRetry() >= MAX_ATTEMPTS)) {
                 log.info("KG build failed permanently mediaId={} status={}, skip", mediaId, status);
                 return;
             }
@@ -113,5 +117,50 @@ public class KgBuildService {
     /** 查询构建状态（Redis 优先，MySQL 兜底回填，旧 kg:build:* 再兜底） */
     public Map<String, String> getStatus(Long mediaId) {
         return stateService.getStatusForApi(mediaId);
+    }
+
+    /**
+     * #77 手动重试失败任务：校验归属 → 重置预算/错误 → 立即重新投递对应阶段消息
+     * （不等 Watcher 巡检，用户点了就要马上动）
+     */
+    public com.example.server.common.Result<String> manualRetry(Long mediaId, Long userId) {
+        KgBuildTask task = stateService.getTask(mediaId);
+        if (task == null) {
+            return com.example.server.common.Result.error(400, "任务不存在");
+        }
+        if (!task.getUserId().equals(userId)) {
+            return com.example.server.common.Result.error(403, "无权操作他人任务");
+        }
+        String failedStatus = task.getStatus();
+        if (!KgTaskStateService.ANALYZE_FAILED.equals(failedStatus)
+                && !KgTaskStateService.COMMIT_FAILED.equals(failedStatus)) {
+            return com.example.server.common.Result.error(400, "仅失败状态的任务可手动重试（当前：" + failedStatus + "）");
+        }
+        if (!stateService.manualRetry(mediaId)) {
+            return com.example.server.common.Result.error(409, "状态已变化，请刷新后重试");
+        }
+
+        // 立即重新投递：analyze 失败发 kg-analyze；commit 失败发 kg-commit
+        try {
+            if (KgTaskStateService.ANALYZE_FAILED.equals(failedStatus)) {
+                KgBuildTask latest = stateService.getTask(mediaId);
+                int attempt = latest.getAnalyzeAttempt() + 1;
+                rocketMQTemplate.convertAndSend(kgAnalyzeTopic,
+                        new KgAnalyzeMsg(mediaId, latest.getVideoUrl(), attempt, userId));
+                stateService.markAnalyzeDispatched(mediaId);
+                log.info("KG manual retry analyze mediaId={} attempt={}", mediaId, attempt);
+            } else {
+                KgBuildTask latest = stateService.getTask(mediaId);
+                int attempt = latest.getCommitAttempt() + 1;
+                rocketMQTemplate.convertAndSend(kgCommitTopic,
+                        new KgCommitMsg(mediaId, attempt, userId));
+                stateService.markCommitDispatched(mediaId);
+                log.info("KG manual retry commit mediaId={} attempt={}", mediaId, attempt);
+            }
+            return com.example.server.common.Result.ok("已重新投递");
+        } catch (Exception e) {
+            log.error("KG manual retry dispatch failed mediaId={}: {}", mediaId, e.getMessage());
+            return com.example.server.common.Result.error(500, "重新投递失败，系统将自动重试");
+        }
     }
 }

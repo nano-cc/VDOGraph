@@ -19,6 +19,7 @@ except ImportError:
 # 层次化参数（参考 GraphRAG：max_cluster_size=10）
 MAX_CLUSTER_SIZE = 10   # 社区实体数超过此值则递归细分
 MAX_LEVEL = 3           # 最大层级
+LEIDEN_SEED = 42        # 固定随机种子：同图多次划分结果一致（社区 id 稳定，eval 可复现）
 
 
 class CommunityDetector:
@@ -93,12 +94,14 @@ class CommunityDetector:
                 G.add_edges(edges)
                 partition = leidenalg.find_partition(
                     G, leidenalg.RBConfigurationVertexPartition,
-                    weights=weights, resolution_parameter=resolution
+                    weights=weights, resolution_parameter=resolution,
+                    seed=LEIDEN_SEED
                 )
             else:
                 partition = leidenalg.find_partition(
                     G, leidenalg.RBConfigurationVertexPartition,
-                    resolution_parameter=resolution
+                    resolution_parameter=resolution,
+                    seed=LEIDEN_SEED
                 )
             return [[G.vs[i]['name'] for i in group] for group in partition]
 
@@ -182,7 +185,7 @@ class CommunityDetector:
         return communities
 
     async def _generate_summaries(self, communities: List[Community]) -> List[Community]:
-        """生成社区摘要"""
+        """生成社区摘要 + 关键发现（GraphRAG 式 findings：摘要讲主题，findings 是可被检索引用的结构化要点）"""
         for community in communities:
             logger.info(f"Generating summary for community {community.id} ({community.entity_count} entities)")
 
@@ -190,26 +193,49 @@ class CommunityDetector:
             if community.entity_count == 1 and community.relationship_count == 0:
                 entity = community.entities[0]
                 community.summary = f"视频提到「{entity.name}」：{entity.description}"
+                community.findings = [entity.description] if entity.description else []
                 continue
 
-            # 多实体社区：用 LLM 生成
+            # 多实体社区：用 LLM 生成（JSON: summary + findings）
             prompt = self._build_summary_prompt(community)
 
             try:
-                summary = await self.deepseek_client.generate_summary(prompt)
+                raw = await self.deepseek_client.generate_summary(prompt)
+                summary, findings = self._parse_summary_response(raw)
                 community.summary = summary
+                community.findings = findings
             except Exception as e:
                 logger.error(f"Failed to generate summary: {e}")
                 community.summary = f"本社区包含 {community.entity_count} 个实体，{community.relationship_count} 个关系。"
+                community.findings = []
 
         return communities
 
+    @staticmethod
+    def _parse_summary_response(raw: str) -> tuple:
+        """防御解析 {summary, findings} JSON；失败则全文当摘要、findings 为空"""
+        import json as _json
+        text = raw.strip()
+        if '```json' in text:
+            text = text.split('```json')[1].split('```')[0].strip()
+        elif '```' in text:
+            text = text.split('```')[1].split('```')[0].strip()
+        try:
+            obj = _json.loads(text)
+            summary = str(obj.get('summary', '')).strip()
+            findings = [str(f).strip() for f in obj.get('findings', []) if str(f).strip()]
+            if summary:
+                return summary, findings[:5]
+        except Exception:
+            pass
+        return raw.strip(), []
+
     def _build_summary_prompt(self, community: Community) -> str:
-        """构建社区摘要 Prompt"""
+        """构建社区摘要 Prompt（summary + findings 结构化输出）"""
         entity_names = [e.name for e in community.entities]
         relationship_descriptions = [f"{r.source} -> {r.target}: {r.description}" for r in community.relationships[:10]]
 
-        return f"""请为以下社区生成一个简短的摘要（50-100字）。
+        return f"""请为以下社区生成摘要和关键发现。
 
 社区包含的实体:
 {', '.join(entity_names)}
@@ -217,6 +243,9 @@ class CommunityDetector:
 社区包含的关系（前 10 个）:
 {chr(10).join(relationship_descriptions)}
 
-请生成一个摘要，说明这个社区讨论的主题是什么。
+要求：
+- summary：50-100 字，说明这个社区讨论的主题
+- findings：3-5 条关键发现，每条一句话，是社区内具体、可查证的事实要点（禁止编造，只从上面的实体/关系信息中提取）
 
-摘要:"""
+只返回 JSON：
+{{"summary": "...", "findings": ["...", "..."]}}"""

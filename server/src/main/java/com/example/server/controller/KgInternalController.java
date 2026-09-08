@@ -33,15 +33,18 @@ public class KgInternalController {
 
     private final KgTaskStateService stateService;
     private final RocketMQTemplate rocketMQTemplate;
+    private final com.example.server.service.MediaVisualsService mediaVisualsService;
     private final String kgCommitTopic;
     private final String internalKey;
 
     public KgInternalController(KgTaskStateService stateService,
                                 RocketMQTemplate rocketMQTemplate,
+                                com.example.server.service.MediaVisualsService mediaVisualsService,
                                 @Value("${rocketmq.topic.kg-commit:kg-commit}") String kgCommitTopic,
                                 @Value("${kg.internal.api-key:}") String internalKey) {
         this.stateService = stateService;
         this.rocketMQTemplate = rocketMQTemplate;
+        this.mediaVisualsService = mediaVisualsService;
         this.kgCommitTopic = kgCommitTopic;
         this.internalKey = internalKey;
     }
@@ -167,5 +170,14 @@ public class KgInternalController {
     private static Long asLong(Object o) {
         if (o instanceof Number n) return n.longValue();
         return Long.parseLong(String.valueOf(o));
+    }
+
+    /** 存量视频封面/时长回填（#69 收尾）：POST /internal/kg/backfill-visuals */
+    @PostMapping("/backfill-visuals")
+    public ResponseEntity<Map<String, Object>> backfillVisuals(
+            @RequestHeader(value = "X-Internal-Key", required = false) String key) {
+        checkKey(key);
+        int done = mediaVisualsService.backfillMissing();
+        return ResponseEntity.ok(Map.of("backfilled", done));
     }
 }

@@ -19,6 +19,7 @@ class AskRequest(BaseModel):
     mode: str = "auto"  # auto=agent 自主决策 / local / global（固定流程）
     user_id: int = 0    # 用户隔离（三期）：检索限定 group_id=user_{user_id}
     media_id: int = None  # 可选：限定单个视频范围内问答（Video Agent 单视频模式）
+    history: list = []  # 会话历史（#72）：[{"role": "user"/"assistant", "content": ...}]，Java 从 MySQL 加载后透传
 
 
 class AskResponse(BaseModel):
@@ -43,7 +44,7 @@ async def ask_stream(request: AskRequest):
         agent = KGAgent()
         try:
             async for event in agent.ask_stream(request.question, group_id=f"user_{request.user_id}",
-                                                media_id=request.media_id):
+                                                media_id=request.media_id, history=request.history):
                 yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
         except Exception as e:
             logger.error(f"Stream ask failed: {e}", exc_info=True)
@@ -84,7 +85,7 @@ async def ask(request: AskRequest):
             from app.services.kg_agent import KGAgent
             agent = KGAgent()
             result = await agent.ask(request.question, group_id=f"user_{request.user_id}",
-                                     media_id=request.media_id)
+                                     media_id=request.media_id, history=request.history)
             return AskResponse(
                 answer=result['answer'],
                 citations=result['citations'],
@@ -250,3 +251,86 @@ async def get_media_communities(media_id: int):
     except Exception as e:
         logger.error(f"Failed to get media communities: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/graph")
+async def get_graph(user_id: int = Query(...), media_id: Optional[int] = Query(None),
+                    limit: int = Query(500, le=2000)):
+    """
+    图谱可视化数据（#84）：nodes（实体，含社区归属用于着色）+ edges（关系）
+    media_id 不传 = 全局图谱（按 source_count 截断 limit）；传 = 单视频子图（全量）
+    """
+    neo4j = Neo4jClient()
+    group_id = f"user_{user_id}"
+    with neo4j.driver.session() as session:
+        if media_id is not None:
+            nodes = session.run("""
+                MATCH (e:Entity {group_id: $g})-[:MENTIONED_IN]->(s:Segment {media_id: $mid})
+                WITH DISTINCT e
+                OPTIONAL MATCH (e)-[:BELONGS_TO]->(c:Community)
+                WITH e, collect(c.id)[0] AS community
+                RETURN e.id AS id, e.name AS name, e.type AS type,
+                       coalesce(e.source_count, 1) AS weight, community
+            """, g=group_id, mid=media_id).data()
+            edges = session.run("""
+                MATCH (a:Entity {group_id: $g})-[r:RELATES_TO]->(b:Entity {group_id: $g})
+                WHERE EXISTS { (a)-[:MENTIONED_IN]->(:Segment {media_id: $mid}) }
+                  AND EXISTS { (b)-[:MENTIONED_IN]->(:Segment {media_id: $mid}) }
+                RETURN a.id AS source, b.id AS target, r.description AS description,
+                       coalesce(r.strength, 5) AS strength
+            """, g=group_id, mid=media_id).data()
+        else:
+            nodes = session.run("""
+                MATCH (e:Entity {group_id: $g})
+                OPTIONAL MATCH (e)-[:BELONGS_TO]->(c:Community)
+                WITH e, collect(c.id)[0] AS community
+                ORDER BY coalesce(e.source_count, 1) DESC LIMIT $limit
+                RETURN e.id AS id, e.name AS name, e.type AS type,
+                       coalesce(e.source_count, 1) AS weight, community
+            """, g=group_id, limit=limit).data()
+            edges = session.run("""
+                MATCH (a:Entity {group_id: $g})-[r:RELATES_TO]->(b:Entity {group_id: $g})
+                WHERE a.source_count IS NOT NULL AND b.source_count IS NOT NULL
+                WITH a, b, r ORDER BY coalesce(r.strength, 5) DESC LIMIT 1500
+                RETURN a.id AS source, b.id AS target, r.description AS description,
+                       coalesce(r.strength, 5) AS strength
+            """, g=group_id).data()
+
+    node_ids = {n['id'] for n in nodes}
+    edges = [e for e in edges if e['source'] in node_ids and e['target'] in node_ids]
+    return {
+        'nodes': nodes,
+        'edges': edges,
+        'truncated': media_id is None and len(nodes) >= limit,
+    }
+
+
+@router.get("/communities")
+async def list_communities(user_id: int = Query(...), level: int = Query(0)):
+    """社区列表（#85 全局图谱社区面板）：level 0（顶层）按实体数降序"""
+    neo4j = Neo4jClient()
+    group_id = f"user_{user_id}"
+    with neo4j.driver.session() as session:
+        rows = session.run("""
+            MATCH (c:Community {group_id: $g, level: $lv})
+            RETURN c.id AS id, c.entity_count AS entity_count,
+                   c.summary AS summary
+            ORDER BY c.entity_count DESC
+        """, g=group_id, lv=level).data()
+    return {'communities': rows}
+
+
+@router.get("/media-summaries")
+async def media_summaries(user_id: int = Query(...)):
+    """#D 当前用户全部视频总结（前端卡片展示用）"""
+    neo4j = Neo4jClient()
+    group_id = f"user_{user_id}"
+    with neo4j.driver.session() as session:
+        rows = session.run("""
+            MATCH (m:Media {group_id: $g}) WHERE m.summary IS NOT NULL
+            RETURN m.id AS id, m.summary AS summary
+        """, g=group_id).data()
+    return {'summaries': [
+        {'media_id': int(str(r['id']).replace('media_', '')), 'summary': r['summary']}
+        for r in rows
+    ]}

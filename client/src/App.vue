@@ -6,9 +6,9 @@
     <header class="navbar">
       <div class="nav-content">
         <div class="brand">
-          <span class="brand-do">DO</span>
-          <span class="brand-video">Video</span>
-          <span class="beta-badge">PRO</span>
+          <span class="brand-do">Video</span>
+          <span class="brand-video">Graph</span>
+          <span class="beta-badge">BETA</span>
         </div>
 
         <div class="nav-controls">
@@ -35,12 +35,42 @@
           </div>
         </div>
       </div>
+
+      <!-- Tab 导航（上传 / 视频库 / 问答）：独立一行，随 navbar 一起吸顶 -->
+      <nav class="tab-bar" role="tablist">
+          <button class="tab-item" :class="{ active: activeTab === 'upload' }" role="tab" @click="activeTab = 'upload'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            上传
+          </button>
+          <button class="tab-item" :class="{ active: activeTab === 'library' }" role="tab" @click="activeTab = 'library'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+            视频库
+            <span v-if="list.length" class="tab-count">{{ list.length }}</span>
+          </button>
+          <button class="tab-item" :class="{ active: activeTab === 'qa' }" role="tab" @click="activeTab = 'qa'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            问答
+          </button>
+        </nav>
     </header>
 
     <main class="main-container">
-      <section class="hero-section">
-        <h1 class="slogan-main">DECODE YOUR VIDEO</h1>
-        <p class="slogan-sub">影视重构 · 算力赋能</p>
+      <transition name="toast-pop">
+        <div
+            v-if="message"
+            class="notification-bar"
+            :class="{ 'error': messageIsError }"
+            :role="messageIsError ? 'alert' : 'status'"
+            :aria-live="messageIsError ? 'assertive' : 'polite'"
+            :title="messageIsError ? '点击关闭这条提示' : null"
+            @click="dismissMessage"
+        >
+          {{ message }}
+        </div>
+      </transition>
+
+      <section v-show="activeTab === 'upload'" class="hero-section"><h1 class="slogan-main">GRAPH YOUR VIDEO</h1>
+        <p class="slogan-sub">视频进图谱 · 问答可溯源</p>
 
         <div class="upload-wrapper">
           <input
@@ -133,87 +163,16 @@
             <button type="button" @click="discardResumableUpload">重新开始</button>
           </div>
         </div>
-        <transition name="toast-pop">
-          <div
-              v-if="message"
-              class="notification-bar"
-              :class="{ 'error': messageIsError }"
-              :role="messageIsError ? 'alert' : 'status'"
-              :aria-live="messageIsError ? 'assertive' : 'polite'"
-              :title="messageIsError ? '点击关闭这条提示' : null"
-              @click="dismissMessage"
-          >
-            {{ message }}
-          </div>
-        </transition>
       </section>
+      <!-- 图谱可视化弹窗（全局/单视频共用） -->
+      <GraphModal
+          :visible="graphModal.visible"
+          :media-id="graphModal.mediaId"
+          :title="graphModal.title"
+          @close="graphModal.visible = false"
+      />
 
-      <section class="kg-section">
-        <div class="kg-card">
-          <div class="kg-header">
-            <h3>知识图谱问答</h3>
-            <p class="kg-sub">基于已解析视频构建的知识网络，答案可溯源到视频片段</p>
-          </div>
-          <div class="kg-input-row">
-            <input
-                v-model="kgQuestion"
-                type="text"
-                class="kg-input"
-                placeholder="问点什么，如：牛肉价格为什么上涨？"
-                aria-label="知识图谱问答输入"
-                :disabled="kgLoading"
-                @keyup.enter="askKg"
-            />
-            <select v-model="kgMode" class="kg-mode" :disabled="kgLoading" aria-label="问答模式">
-              <option value="auto">智能 Agent</option>
-              <option value="local">事实检索</option>
-              <option value="global">主题概括</option>
-            </select>
-            <button class="kg-ask-btn" :disabled="kgLoading || !kgQuestion.trim()" @click="askKg">
-              {{ kgLoading ? '思考中…' : '提问' }}
-            </button>
-          </div>
-          <p v-if="kgError" class="kg-error" role="alert">{{ kgError }}</p>
-          <div v-if="kgEvents.length" class="kg-thinking">
-            <div class="kg-thinking-title">Agent 思考过程</div>
-            <div v-for="(ev, i) in kgEvents" :key="i" class="kg-event" :class="ev.type">
-              <template v-if="ev.type === 'tool_start'">
-                <span class="kg-event-icon">🔍</span>
-                <span class="kg-event-name">{{ ev.tool }}</span>
-                <span class="kg-event-query">{{ ev.query }}</span>
-              </template>
-              <template v-else-if="ev.type === 'tool_end'">
-                <div class="kg-event-result">{{ ev.result_preview }}</div>
-              </template>
-            </div>
-          </div>
-          <div v-if="kgAnswer" class="kg-answer markdown-body" v-html="kgAnswerHtml"></div>
-          <div v-if="kgToolCalls.length" class="kg-tools">
-            <span class="kg-tools-label">Agent 检索路径：</span>{{ kgToolCalls.join(' → ') }}
-          </div>
-          <div v-if="kgCitations.length" class="kg-citations">
-            <div class="kg-cite-title">溯源 · {{ kgCitations.length }} 个来源片段</div>
-            <div class="kg-cite-list">
-              <div v-for="c in kgCitations" :key="c.segment_id" class="kg-cite-item" @click="playCitation(c)" title="点击播放该片段">
-                <img
-                    v-if="c.frame_urls && c.frame_urls.length"
-                    :src="c.frame_urls[0]"
-                    class="kg-cite-frame"
-                    alt="片段证据帧"
-                    loading="lazy"
-                />
-                <div class="kg-cite-body">
-                  <div class="kg-cite-time">媒体 {{ c.media_id }} · {{ formatMsTimestamp(c.start_ms) }} - {{ formatMsTimestamp(c.end_ms) }}</div>
-                  <div class="kg-cite-text">{{ c.transcript_excerpt }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div v-if="kgVideo.visible" class="kg-video-backdrop" @click="kgVideo.visible = false">
-        <div class="kg-video-modal" @click.stop>
+      <div v-if="kgVideo.visible" class="kg-video-backdrop" @click="kgVideo.visible = false">        <div class="kg-video-modal" @click.stop>
           <div class="kg-video-header">
             <span>{{ kgVideo.title }}</span>
             <button class="kg-video-close" @click="kgVideo.visible = false" aria-label="关闭">✕</button>
@@ -269,11 +228,16 @@
         </div>
       </div>
 
-      <section v-if="list.length > 0" class="workspace-section">
+      <section v-show="activeTab === 'library'" class="workspace-section">
         <div class="section-header">
           <div class="library-title">
             <h3>视频资料库</h3>
             <div class="count-chip">{{ list.length }} 个视频</div>
+            <!-- 全局图谱入口 -->
+            <button v-if="currentUser" class="graph-entry-btn" @click="openGraph(null)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="6" r="2.5"></circle><circle cx="19" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><line x1="7.2" y1="7.5" x2="10.5" y2="16"></line><line x1="16.8" y1="7.5" x2="13.5" y2="16"></line><line x1="7.5" y1="6" x2="16.5" y2="6"></line></svg>
+              查看全局图谱
+            </button>
           </div>
           <label class="library-search">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -310,6 +274,9 @@
               </div>
               <div class="meta-info">
                 <div class="filename-mask" :title="item.filename">{{ item.filename }}</div>
+                <div v-if="mediaSummaries[item.id]" class="card-summary" :title="mediaSummaries[item.id]">
+                  {{ mediaSummaries[item.id] }}
+                </div>
                 <div class="meta-tags">
                   <span class="time-tag">{{ formatTime(item.uploadTime) }}</span>
                   <span v-if="item.durationMs && !coverUrlOf(item)" class="time-tag">{{ formatDuration(item.durationMs) }}</span>
@@ -338,6 +305,14 @@
             <div v-if="lifecycleOpenId === item.id" class="lifecycle-panel" @click.stop>
               <template v-if="lifecycleOf(item).failed">
                 <div class="lifecycle-step failed">✕ 图谱构建失败：{{ kgBuildStatus[item.id]?.message || '未知错误' }}</div>
+                <!-- #77：失败任务用户可自助重试（重置重试预算，立即重新投递） -->
+                <button
+                  class="kg-retry-btn"
+                  :disabled="kgRetryingId === item.id"
+                  @click.stop="retryKgBuild(item)"
+                >
+                  {{ kgRetryingId === item.id ? '重新投递中…' : '↻ 重试构建' }}
+                </button>
               </template>
               <template v-else>
                 <div
@@ -359,6 +334,18 @@
             </div>
 
             <div class="action-dock">
+              <button
+                  class="dock-item"
+                  :disabled="kgStatusOf(item.id) !== 'SUCCESS'"
+                  :title="kgStatusOf(item.id) === 'SUCCESS' ? '查看该视频的知识图谱' : '图谱构建完成后可查看'"
+                  @click="openGraph(item)"
+              >
+                <span class="item-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="5" cy="6" r="2.5"></circle><circle cx="19" cy="6" r="2.5"></circle><circle cx="12" cy="18" r="2.5"></circle><line x1="7.2" y1="7.5" x2="10.5" y2="16"></line><line x1="16.8" y1="7.5" x2="13.5" y2="16"></line><line x1="7.5" y1="6" x2="16.5" y2="6"></line></svg>
+                </span>
+                <span class="item-label">图谱</span>
+              </button>
+
               <button
                   class="dock-item"
                   :disabled="item.status !== 'COMPLETED'"
@@ -400,9 +387,21 @@
             </div>
           </div>
         </div>
-        <div v-if="visibleList.length === 0" class="library-empty">
+        <div v-if="list.length === 0" class="library-empty">
+          <p>还没有视频</p>
+          <button type="button" @click="activeTab = 'upload'">去上传页导入</button>
+        </div>
+        <div v-else-if="visibleList.length === 0" class="library-empty">
           <p>没有找到“{{ searchQuery }}”</p>
           <button type="button" @click="searchQuery = ''">清除搜索</button>
+        </div>
+      </section>
+
+      <!-- #73：问答区移到视频库之后（上传 → 管理 → 问答的用户动线） -->
+      <section v-show="activeTab === 'qa'" class="kg-section">
+        <div class="kg-card">
+          <!-- #72：多轮会话 + 多 Agent 编排问答（组件化，见 KgChatPanel.vue） -->
+          <KgChatPanel @play-citation="playCitation" />
         </div>
       </section>
 
@@ -727,14 +726,13 @@
 import { computed, nextTick, ref, watch, onMounted, onUnmounted } from 'vue'
 import { apiRequest, clearAuthToken, hasAuthToken, setAuthToken } from './api'
 import {
-  forgetUploadProgress,
   formatBytes,
   formatDurationText,
-  hasUploadProgress,
-  uploadVideoInChunks,
   validateVideoFile
 } from './chunkUpload'
 import { uploadVideoS3 } from './s3Upload'
+import KgChatPanel from './KgChatPanel.vue'
+import GraphModal from './GraphModal.vue'
 import { DEMO_ITEM } from './demoData'
 import { createTaskStreams } from './taskEvents'
 import { useAnalysisWorkspace } from './useAnalysisWorkspace'
@@ -797,6 +795,18 @@ const coverUrlOf = (item) => {
   return `/media/cover?id=${item.id}&token=${encodeURIComponent(token || '')}`
 }
 
+// --- Tab 导航（上传 / 视频库 / 问答） ---
+const activeTab = ref('upload')
+let firstListLoaded = false
+
+// --- 图谱可视化弹窗（#84） ---
+const graphModal = ref({ visible: false, mediaId: null, title: '' })
+const openGraph = (item) => {
+  graphModal.value = item
+    ? { visible: true, mediaId: item.id, title: `单视频图谱 · ${item.filename}` }
+    : { visible: true, mediaId: null, title: '全局知识图谱' }
+}
+
 // --- 生命周期 stepper ---
 const lifecycleOpenId = ref(null)
 const LIFECYCLE_STEPS = [
@@ -821,96 +831,43 @@ const lifecycleOf = (item) => {
 const toggleLifecycle = (item) => {
   lifecycleOpenId.value = lifecycleOpenId.value === item.id ? null : item.id
 }
+
+// --- #77 失败任务手动重试 ---
+const kgRetryingId = ref(null)
+const retryKgBuild = async (item) => {
+  if (kgRetryingId.value === item.id) return
+  kgRetryingId.value = item.id
+  try {
+    const res = await apiRequest(`/kg/retry?mediaId=${item.id}`, { method: 'POST' })
+    const body = await res.json().catch(() => ({}))
+    if (res.ok && body.code === 0) {
+      message.value = `已重新投递图谱构建：${item.filename}`
+      messageIsError.value = false
+      fetchKgStatuses()  // 立即刷新一次状态
+    } else {
+      message.value = body.message || '重试失败'
+      messageIsError.value = true
+    }
+  } catch (e) {
+    message.value = '重试请求失败'
+    messageIsError.value = true
+  } finally {
+    kgRetryingId.value = null
+  }
+}
 const isDragOver = ref(false)
 const currentUser = ref(null)
 const showAuthModal = ref(false)
 
-// --- 知识图谱问答 ---
-const kgQuestion = ref('')
-const kgMode = ref('auto')
-const kgLoading = ref(false)
-const kgAnswer = ref('')
-const kgCitations = ref([])
-const kgToolCalls = ref([])
+// --- 知识图谱问答（#72 起组件化到 KgChatPanel.vue，这里只保留溯源播放所需的状态） ---
 const kgError = ref('')
-const kgEvents = ref([])  // agent 思考过程事件流
 const kgVideo = ref({ visible: false, url: '', startMs: 0, title: '' })
-const kgAnswerHtml = computed(() => renderMarkdown(kgAnswer.value))
 
 function formatMsTimestamp(ms) {
   const totalSeconds = Math.floor((ms || 0) / 1000)
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
   return `${minutes}:${String(seconds).padStart(2, '0')}`
-}
-
-async function askKg() {
-  const question = kgQuestion.value.trim()
-  if (!question || kgLoading.value) return
-  if (!currentUser.value) {
-    openAuthModal()
-    return
-  }
-  kgLoading.value = true
-  kgError.value = ''
-  kgAnswer.value = ''
-  kgCitations.value = []
-  kgToolCalls.value = []
-  kgEvents.value = []
-  try {
-    if (kgMode.value === 'auto') {
-      await askKgStream(question)
-    } else {
-      const res = await apiRequest(
-        `/kg/ask?question=${encodeURIComponent(question)}&mode=${encodeURIComponent(kgMode.value)}`,
-        { method: 'POST' }
-      )
-      if (!res.ok) throw new Error(await res.text() || '问答请求失败')
-      const data = await res.json()
-      kgAnswer.value = data.answer || ''
-      kgCitations.value = data.citations || []
-      kgToolCalls.value = data.tool_calls || data.toolCalls || []
-    }
-  } catch (error) {
-    kgError.value = error.message || '问答请求失败'
-  } finally {
-    kgLoading.value = false
-  }
-}
-
-/** 流式问答：逐条接收 agent 思考过程事件 */
-async function askKgStream(question) {
-  const token = localStorage.getItem('authToken')
-  const res = await fetch(
-    `/kg/ask/stream?question=${encodeURIComponent(question)}`,
-    { method: 'POST', headers: { Authorization: `Bearer ${token}` } }
-  )
-  if (!res.ok) throw new Error(`问答请求失败 (${res.status})`)
-
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
-    buffer = lines.pop()  // 最后半行留到下次
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue
-      let event
-      try { event = JSON.parse(line.slice(6)) } catch { continue }
-      if (event.type === 'final') {
-        kgAnswer.value = event.answer || ''
-        kgCitations.value = event.citations || []
-        kgToolCalls.value = event.tool_calls || []
-      } else if (event.type === 'error') {
-        kgError.value = event.message || '问答失败'
-      } else {
-        kgEvents.value.push(event)
-      }
-    }
-  }
 }
 
 /** 点击溯源卡片：播放对应视频片段 */
@@ -1243,7 +1200,8 @@ const applyUploadProgress = progress => {
 }
 
 const rememberResumableUpload = target => {
-  if (!target || !hasUploadProgress(target)) {
+  // S3 断点续传由 quickHash 服务端找回（uploadVideoS3 内部处理），这里只负责 UI 提示
+  if (!target) {
     resumableFile.value = null
     return
   }
@@ -1269,7 +1227,7 @@ const uploadFile = async () => {
   lastUploadProgress = {}
   const uploadUserId = currentUser.value?.id
   uploadProgress.value = {
-    label: hasUploadProgress(target) ? '正在核对已上传分片' : '准备分片上传',
+    label: '准备分片上传',
     filename: target.name,
     percent: 0,
     detail: `0 B / ${formatBytes(target.size)}`,
@@ -1290,6 +1248,7 @@ const uploadFile = async () => {
     if (currentUser.value?.id !== uploadUserId) return
     resumableFile.value = null
     showMsg(instant ? `⚡ ${target.name} 已上传过，已直接关联（秒传）` : `✅ ${target.name} 上传完成`)
+    activeTab.value = 'library'  // 传完自动跳到视频库看进度
     await fetchList({ notify: true })
     if (!instant && mediaId) {
       const item = list.value.find(m => String(m.id) === String(mediaId))
@@ -1330,7 +1289,6 @@ const resumeUpload = async () => {
 }
 
 const discardResumableUpload = () => {
-  forgetUploadProgress(resumableFile.value)
   resumableFile.value = null
   resumableChunks.value = { done: 0, total: 0 }
   showMsg('已清除保留的上传进度，下次将从头开始')
@@ -1475,7 +1433,13 @@ const fetchList = async ({ notify = false } = {}) => {
     if (res.status === 401) return null
     if (!res.ok) throw new Error('加载视频列表失败')
     list.value = await res.json()
+    // 首次加载：有视频的用户直接落在视频库页（上传页对新用户才有意义）
+    if (!firstListLoaded && list.value.length > 0 && activeTab.value === 'upload') {
+      activeTab.value = 'library'
+    }
+    firstListLoaded = true
     fetchKgStatuses()
+    fetchMediaSummaries()
   } catch (error) {
     console.error(error)
     if (notify) showMsg('视频资料库加载失败，请稍后刷新', true)
@@ -1487,6 +1451,22 @@ const fetchList = async ({ notify = false } = {}) => {
 // --- 知识图谱构建状态 ---
 const kgBuildStatus = ref({})  // mediaId -> { status, message }
 let kgStatusTimer = null
+
+// --- 视频总结（Neo4j Media.summary，卡片简介） ---
+const mediaSummaries = ref({})  // mediaId -> summary text
+
+async function fetchMediaSummaries() {
+  if (DEMO_MODE || !currentUser.value) return
+  try {
+    const res = await apiRequest('/kg/media-summaries')
+    if (!res.ok) return
+    const body = await res.json()
+    const rows = (body.data || body).summaries || []
+    const map = {}
+    for (const r of rows) map[r.media_id] = r.summary
+    mediaSummaries.value = map
+  } catch { /* 简介加载失败不影响列表 */ }
+}
 
 async function fetchKgStatuses() {
   if (DEMO_MODE || !currentUser.value) return
@@ -2011,8 +1991,27 @@ html, body, #app {
 .status-pill.is-active .status-dot { animation: pulse-lime 1.5s infinite alternate; }
 
 /* Hero */
-.main-container { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
-.hero-section { text-align: center; margin-bottom: 6rem; animation: slideUpFade 0.8s forwards; }
+.main-container { max-width: 1200px; margin: 0 auto; padding: 1rem 2rem 1.5rem; }
+
+/* Tab 导航（#85）：navbar 内第二行，随 navbar 吸顶；三个 Tab 内容区各自滚动 */
+.navbar { padding: 0.9rem 0 0; }
+.tab-bar { display: flex; gap: 6px; max-width: 1200px; margin: 0.6rem auto 0; padding: 0 2rem; border-bottom: 1px solid var(--border-tech, #2a2f3a); }
+.tab-item { display: inline-flex; align-items: center; gap: 7px; padding: 9px 22px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--text-sub, #9ca3af); font-size: 14px; cursor: pointer; transition: all 0.2s; margin-bottom: -1px; }
+.tab-item:hover { color: var(--text-main, #e5e7eb); }
+.tab-item.active { color: var(--accent-lime, #c5f946); border-bottom-color: var(--accent-lime, #c5f946); font-weight: 600; }
+.tab-count { background: rgba(197, 249, 70, 0.15); color: var(--accent-lime, #c5f946); font-size: 11px; padding: 1px 7px; border-radius: 10px; font-variant-numeric: tabular-nums; }
+.tab-item.active .tab-count { background: var(--accent-lime, #c5f946); color: #0b0c10; }
+
+/* 各 Tab 内容区独立滚动（头部+Tab 固定不动） */
+.hero-section, .workspace-section, .kg-section { max-height: calc(100vh - 118px); overflow-y: auto; scrollbar-width: thin; }
+
+/* 通知条浮动在内容之上，滚动时仍可见 */
+.notification-bar { position: fixed; top: 128px; left: 50%; transform: translateX(-50%); z-index: 250; }
+
+/* 图谱入口按钮（视频库标题栏） */
+.graph-entry-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; padding: 5px 12px; font-size: 12px; color: var(--accent-lime, #c5f946); background: rgba(197, 249, 70, 0.08); border: 1px solid rgba(197, 249, 70, 0.35); border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.graph-entry-btn:hover { background: rgba(197, 249, 70, 0.2); }
+.hero-section { text-align: center; margin-bottom: 2rem; animation: slideUpFade 0.8s forwards; }
 .slogan-main { font-family: 'Syncopate', sans-serif; font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(197, 249, 70, 0.2); }
 .slogan-sub { font-size: 1.1rem; color: var(--text-sub); letter-spacing: 2px; margin-bottom: 3rem; }
 
@@ -2139,6 +2138,7 @@ html, body, #app {
 .card-meta { display: flex; gap: 1.5rem; padding: 1.5rem; align-items: center; border-bottom: 1px solid var(--border-tech); background: rgba(18, 21, 18, 0.5); }
 .meta-icon { width: 56px; height: 56px; background: rgba(197, 249, 70, 0.05); border: 1px solid var(--accent-lime); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-lime); }
 .filename-mask { font-size: 1.1rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+.card-summary { font-size: 0.78rem; color: var(--text-sub); line-height: 1.5; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: default; }
 .meta-tags { display: flex; gap: 12px; font-size: 0.85rem; font-family: monospace; margin-top: 5px; }
 .time-tag { color: var(--text-sub); }
 .status-indicator { font-weight: 600; padding: 2px 8px; border-radius: 4px; }
@@ -2150,12 +2150,13 @@ html, body, #app {
 .status-indicator.kg-status.success { color: var(--accent-lime); border: 1px solid var(--accent-lime); background: rgba(197, 249, 70, 0.06); }
 .status-indicator.kg-status.failed { color: #ff7c88; border: 1px solid #ff4757; }
 
-.action-dock { display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 12px; padding: 12px; background: rgba(5, 8, 5, 0.5); }
-.dock-item { position: relative; border: 1px solid var(--border-tech); background: var(--bg-card); border-radius: 8px; padding: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.3s; color: var(--text-sub); font-family: monospace; overflow: hidden; }
+.action-dock { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; background: rgba(5, 8, 5, 0.5); }
+.dock-item { position: relative; border: 1px solid var(--border-tech); background: var(--bg-card); border-radius: 8px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; cursor: pointer; transition: all 0.3s; color: var(--text-sub); font-family: monospace; overflow: hidden; }
+.dock-item .item-label { white-space: nowrap; font-size: 0.72rem; letter-spacing: 0; }
 .dock-item:hover:not(:disabled) { color: var(--accent-lime); border-color: var(--accent-lime); background: rgba(197, 249, 70, 0.05); }
 .dock-item:disabled { opacity: 0.3; cursor: not-allowed; }
 .dock-item.ai-core { border-color: var(--accent-purple); color: var(--accent-purple); }
-.dock-item.ai-core .label-group { display: flex; flex-direction: column; align-items: flex-start; z-index: 1; }
+.dock-item.ai-core .label-group { display: flex; flex-direction: column; align-items: center; z-index: 1; }
 .dock-item.ai-core .item-sub { font-size: 0.75rem; color: var(--accent-purple); opacity: 0.8; }
 .dock-item.ai-core:hover:not(:disabled) { border-color: var(--accent-lime); color: var(--text-inverse); background: var(--accent-lime); }
 .dock-item.ai-core:hover:not(:disabled) .item-sub { color: var(--text-inverse); }
@@ -2455,6 +2456,9 @@ html, body, #app {
 .lifecycle-step.failed { color: #ef4444; }
 .lifecycle-step .step-progress { font-variant-numeric: tabular-nums; color: #3b82f6; }
 .lifecycle-step .step-msg { color: var(--text-sub); font-size: 0.72rem; }
+.kg-retry-btn { margin-top: 4px; align-self: flex-start; padding: 5px 14px; font-size: 0.78rem; color: #3b82f6; background: transparent; border: 1px solid #3b82f6; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+.kg-retry-btn:hover:not(:disabled) { background: #3b82f6; color: #fff; }
+.kg-retry-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
 </style>

@@ -81,18 +81,23 @@ public class AiServiceClient {
      * 完成后 Python 回调 Java /internal/kg/analyzed 推进状态机
      */
     public Map<String, Object> analyzeAsync(Long mediaId, String videoUrl, int attempt, Long userId) {
+        return analyzeAsync(mediaId, videoUrl, attempt, userId, null);
+    }
+
+    /** #84 uploadTimeMs：视频真实上传时间（毫秒戳），写入 Neo4j Media.uploaded_at；可空向后兼容 */
+    public Map<String, Object> analyzeAsync(Long mediaId, String videoUrl, int attempt, Long userId, Long uploadTimeMs) {
         String url = aiServiceUrl + "/api/v1/pipeline/analyze-async";
-        Map<String, Object> request = Map.of(
-                "video_path", videoUrl,
-                "media_id", mediaId,
-                "user_goal", "",
-                "force", false,
-                "attempt", attempt,
-                "user_id", userId
-        );
-        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(request, jsonHeaders());
+        java.util.Map<String, Object> request = new java.util.HashMap<>();
+        request.put("video_path", videoUrl);
+        request.put("media_id", mediaId);
+        request.put("user_goal", "");
+        request.put("force", false);
+        request.put("attempt", attempt);
+        request.put("user_id", userId);
+        if (uploadTimeMs != null) request.put("upload_time_ms", uploadTimeMs);
+        HttpEntity<java.util.Map<String, Object>> httpEntity = new HttpEntity<>(request, jsonHeaders());
         log.info("Dispatching async KG analyze: mediaId={} attempt={}", mediaId, attempt);
-        ResponseEntity<Map> response = shortTimeoutRestTemplate.postForEntity(url, httpEntity, Map.class);
+        ResponseEntity<java.util.Map> response = shortTimeoutRestTemplate.postForEntity(url, httpEntity, java.util.Map.class);
         return response.getBody();
     }
 
@@ -131,6 +136,40 @@ public class AiServiceClient {
     }
 
     /**
+     * #85 社区列表（顶层，按实体数降序）
+     */
+    public Map<String, Object> getCommunities(Long userId) {
+        String url = aiServiceUrl + "/api/v1/query/communities?user_id=" + userId;
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url, org.springframework.http.HttpMethod.GET,
+                new HttpEntity<>(jsonHeaders()), Map.class);
+        return response.getBody();
+    }
+
+    /**
+     * 视频总结列表（Neo4j Media.summary）
+     */
+    public Map<String, Object> getMediaSummaries(Long userId) {
+        String url = aiServiceUrl + "/api/v1/query/media-summaries?user_id=" + userId;
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url, org.springframework.http.HttpMethod.GET,
+                new HttpEntity<>(jsonHeaders()), Map.class);
+        return response.getBody();
+    }
+
+    /**
+     * #84 图谱可视化数据（mediaId null = 全局图谱）
+     */
+    public Map<String, Object> getGraph(Long userId, Long mediaId) {
+        String url = aiServiceUrl + "/api/v1/query/graph?user_id=" + userId
+                + (mediaId != null ? "&media_id=" + mediaId : "");
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url, org.springframework.http.HttpMethod.GET,
+                new HttpEntity<>(jsonHeaders()), Map.class);
+        return response.getBody();
+    }
+
+    /**
      * 阶段二：图写入（调用方需持 Redisson 全局写锁 kg:graph:write）
      */
     public Map<String, Object> commitGraph(Long mediaId) {
@@ -138,6 +177,21 @@ public class AiServiceClient {
         Map<String, Object> request = Map.of("media_id", mediaId);
         HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(request, jsonHeaders());
         log.info("Calling AI service commit: mediaId={}", mediaId);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, httpEntity, Map.class);
+        return response.getBody();
+    }
+
+    /**
+     * #83 触发全量 Leiden 社区重建（异步投递；singleton 占比低于 minRatio 时 Python 侧跳过）
+     */
+    public Map<String, Object> rebuildCommunities(String groupId, double minRatio) {
+        String url = aiServiceUrl + "/api/v1/community/rebuild";
+        Map<String, Object> request = Map.of(
+                "group_id", groupId,
+                "min_singleton_ratio", minRatio
+        );
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(request, jsonHeaders());
+        log.info("Calling AI service community rebuild: groupId={}", groupId);
         ResponseEntity<Map> response = restTemplate.postForEntity(url, httpEntity, Map.class);
         return response.getBody();
     }
@@ -262,20 +316,32 @@ public class AiServiceClient {
      * 知识图谱问答（mediaId 可选：限定单个视频范围内问答）
      */
     public AskResponse ask(String question, String mode, Long userId, Long mediaId) {
+        return ask(question, mode, userId, mediaId, null);
+    }
+
+    /**
+     * 知识图谱问答（#72：history 可选，会话历史 [{role, content}] 透传给 Python agent）
+     */
+    public AskResponse ask(String question, String mode, Long userId, Long mediaId,
+                           java.util.List<java.util.Map<String, String>> history) {
         String url = aiServiceUrl + "/api/v1/query/ask";
 
-        java.util.Map<String, String> request = new java.util.HashMap<>();
+        java.util.Map<String, Object> request = new java.util.HashMap<>();
         request.put("question", question);
         request.put("mode", mode == null || mode.isBlank() ? "auto" : mode);
-        request.put("user_id", String.valueOf(userId));
+        request.put("user_id", userId);
         if (mediaId != null) {
-            request.put("media_id", String.valueOf(mediaId));
+            request.put("media_id", mediaId);
+        }
+        if (history != null && !history.isEmpty()) {
+            request.put("history", history);
         }
 
-        HttpEntity<java.util.Map<String, String>> httpEntity = new HttpEntity<>(request, jsonHeaders());
+        HttpEntity<java.util.Map<String, Object>> httpEntity = new HttpEntity<>(request, jsonHeaders());
 
         try {
-            log.info("Calling AI service: {} question='{}' mode={} mediaId={}", url, question, mode, mediaId);
+            log.info("Calling AI service: {} question='{}' mode={} mediaId={} history={}",
+                    url, question, mode, mediaId, history == null ? 0 : history.size());
             ResponseEntity<AskResponse> response = restTemplate.postForEntity(
                     url, httpEntity, AskResponse.class);
             log.info("AI service answered, citations: {}",
@@ -291,13 +357,24 @@ public class AiServiceClient {
      * 知识图谱问答（SSE 流式，透传 Python 的事件流到 output）
      */
     public void askStream(String question, Long userId, java.io.OutputStream out) throws java.io.IOException {
-        askStream(question, userId, null, out);
+        askStream(question, userId, null, null, out, null);
     }
 
     /**
      * 知识图谱问答（SSE 流式，mediaId 可选：限定单个视频范围内问答）
      */
     public void askStream(String question, Long userId, Long mediaId, java.io.OutputStream out) throws java.io.IOException {
+        askStream(question, userId, mediaId, null, out, null);
+    }
+
+    /**
+     * 知识图谱问答（SSE 流式，#72 全参版）
+     * history: 会话历史透传；onFinalAnswer: 从透传流中捕获 final 事件的 answer（Java 侧落库用）
+     */
+    public void askStream(String question, Long userId, Long mediaId,
+                          java.util.List<java.util.Map<String, String>> history,
+                          java.io.OutputStream out,
+                          java.util.function.Consumer<String> onFinalAnswer) throws java.io.IOException {
         java.net.URL url = new java.net.URL(aiServiceUrl + "/api/v1/query/ask/stream");
         java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
@@ -309,13 +386,24 @@ public class AiServiceClient {
         conn.setConnectTimeout(10_000);
         conn.setReadTimeout(300_000);  // agent 多步检索可能超过 1 分钟
 
-        String body = "{\"question\": " + toJsonString(question) + ", \"mode\": \"auto\", \"user_id\": " + userId
-                + (mediaId != null ? ", \"media_id\": " + mediaId : "") + "}";
+        java.util.Map<String, Object> bodyMap = new java.util.HashMap<>();
+        bodyMap.put("question", question);
+        bodyMap.put("mode", "auto");
+        bodyMap.put("user_id", userId);
+        if (mediaId != null) {
+            bodyMap.put("media_id", mediaId);
+        }
+        if (history != null && !history.isEmpty()) {
+            bodyMap.put("history", history);
+        }
+        String body = com.alibaba.fastjson2.JSON.toJSONString(bodyMap);
         try (java.io.OutputStream os = conn.getOutputStream()) {
             os.write(body.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         }
 
-        log.info("Streaming AI service ask: '{}'", question);
+        log.info("Streaming AI service ask: '{}' (history={})", question, history == null ? 0 : history.size());
+        // 透传 + 尾部缓存（捕获 final 事件用于落库；SSE 事件在末尾，留 64KB 足够）
+        java.io.ByteArrayOutputStream tail = new java.io.ByteArrayOutputStream();
         try (java.io.InputStream in = conn.getInputStream()) {
             // 边读边写边 flush（SSE 需要事件级实时性，transferTo 不 flush 会被缓冲区攒住）
             byte[] buffer = new byte[4096];
@@ -323,26 +411,45 @@ public class AiServiceClient {
             while ((n = in.read(buffer)) != -1) {
                 out.write(buffer, 0, n);
                 out.flush();
+                if (onFinalAnswer != null) {
+                    tail.write(buffer, 0, n);
+                    if (tail.size() > 64 * 1024) {
+                        byte[] all = tail.toByteArray();
+                        tail.reset();
+                        tail.write(all, all.length - 48 * 1024, 48 * 1024);
+                    }
+                }
             }
         } finally {
             conn.disconnect();
         }
-    }
 
-    private static String toJsonString(String value) {
-        // 最简 JSON 字符串转义
-        StringBuilder sb = new StringBuilder("\"");
-        for (char c : value.toCharArray()) {
-            switch (c) {
-                case '"' -> sb.append("\\\"");
-                case '\\' -> sb.append("\\\\");
-                case '\n' -> sb.append("\\n");
-                case '\r' -> sb.append("\\r");
-                case '\t' -> sb.append("\\t");
-                default -> sb.append(c);
+        if (onFinalAnswer != null) {
+            String answer = extractFinalAnswer(tail.toString(java.nio.charset.StandardCharsets.UTF_8));
+            if (answer != null && !answer.isBlank()) {
+                onFinalAnswer.accept(answer);
             }
         }
-        return sb.append("\"").toString();
+    }
+
+    /** 从 SSE 尾部缓存里找最后一个 "type":"final" 事件并取 answer 字段 */
+    private static String extractFinalAnswer(String sseTail) {
+        int idx = sseTail.lastIndexOf("\"type\":\"final\"");
+        if (idx < 0) idx = sseTail.lastIndexOf("\"type\": \"final\"");
+        if (idx < 0) return null;
+        int dataStart = sseTail.lastIndexOf("data:", idx);
+        if (dataStart < 0) return null;
+        String json = sseTail.substring(dataStart + 5).trim();
+        // 去掉行尾 SSE 分隔
+        int nl = json.indexOf("\n");
+        if (nl > 0) json = json.substring(0, nl);
+        try {
+            com.alibaba.fastjson2.JSONObject obj = com.alibaba.fastjson2.JSON.parseObject(json);
+            return obj.getString("answer");
+        } catch (Exception e) {
+            log.warn("Failed to parse final SSE event for persistence: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

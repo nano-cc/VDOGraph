@@ -108,6 +108,26 @@ public class MediaVisualsService {
         }
     }
 
+    /**
+     * 存量回填（#69 收尾）：给缺时长/封面的历史视频补跑 enrich。
+     * enrich 前的视频没有这两个字段，一次性补齐；返回处理条数。
+     */
+    public int backfillMissing() {
+        com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<com.example.server.entity.MediaFile> qw =
+                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
+        qw.eq("status", "COMPLETED")
+                .and(w -> w.isNull("duration_ms").or().isNull("cover_url"))
+                .isNotNull("file_path").ne("file_path", "");
+        java.util.List<com.example.server.entity.MediaFile> targets = mediaFileMapper.selectList(qw);
+        int done = 0;
+        for (com.example.server.entity.MediaFile m : targets) {
+            enrich(m.getId(), m.getFilePath());
+            done++;
+        }
+        log.info("media_visuals_backfill done={}", done);
+        return done;
+    }
+
     private boolean grabFrame(String signedUrl, Path out, String seekSeconds) {
         try {
             Process process = new ProcessBuilder(

@@ -50,10 +50,46 @@ class AliyunAsrClient:
 
     def _execute(self, file_path: Path) -> str:
         """
-        执行 ASR 请求（base_url 为完整转写端点）
-        与 Java 端 AliyunAsrUtils.execute() 保持一致
+        执行 ASR 请求，两种模式按 base_url 自动选择：
+        - base_url 以 /chat/completions 结尾：chat 模式（base64 音频走 input_audio，
+          适配百炼 qwen3-omni-flash 等 omni 模型——该账号的 /audio/transcriptions 404）
+        - 否则：标准 OpenAI multipart /audio/transcriptions 模式
         """
         cfg = self._config()
+        if cfg['base_url'].rstrip('/').endswith('/chat/completions'):
+            return self._execute_chat_mode(cfg, file_path)
+        return self._execute_transcriptions_mode(cfg, file_path)
+
+    def _execute_chat_mode(self, cfg: dict, file_path: Path) -> str:
+        """chat 模式：base64 音频 + 转写 prompt，返回 choices[0].message.content"""
+        import base64
+        b64 = base64.b64encode(file_path.read_bytes()).decode()
+        response = requests.post(
+            cfg['base_url'],
+            headers={
+                'Authorization': f"Bearer {cfg['api_key']}",
+                'Content-Type': 'application/json',
+            },
+            json={
+                'model': cfg['model'],
+                'messages': [{'role': 'user', 'content': [
+                    {'type': 'input_audio',
+                     'input_audio': {'data': f'data:audio/wav;base64,{b64}', 'format': 'wav'}},
+                    {'type': 'text', 'text': '将这段语音完整转写为中文文本，只输出转写结果，不要任何解释。'},
+                ]}],
+            },
+            timeout=180,
+        )
+        if response.status_code == 200:
+            return response.json()['choices'][0]['message']['content'] or ''
+        if response.status_code == 429 or response.status_code >= 500:
+            raise RuntimeError(f"ASR transient HTTP {response.status_code}")
+        raise ValueError(f"ASR request rejected with HTTP {response.status_code}: {response.text[:200]}")
+
+    def _execute_transcriptions_mode(self, cfg: dict, file_path: Path) -> str:
+        """标准 /audio/transcriptions 模式（SiliconFlow 等）
+        与 Java 端 AliyunAsrUtils.execute() 保持一致
+        """
         with open(file_path, 'rb') as f:
             files = {
                 'file': (file_path.name, f, 'application/octet-stream')

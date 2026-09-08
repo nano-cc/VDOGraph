@@ -73,6 +73,19 @@ class Neo4jClient:
                 }
             """)
 
+            # 视频总结向量索引（#84：视频级语义检索）
+            session.run("""
+                CREATE VECTOR INDEX media_summary_embedding_index IF NOT EXISTS
+                FOR (m:Media)
+                ON m.summary_embedding
+                OPTIONS {
+                  indexConfig: {
+                    `vector.dimensions`: 1024,
+                    `vector.similarity_function`: 'cosine'
+                  }
+                }
+            """)
+
             # 片段 ASR 向量索引
             session.run("""
                 CREATE VECTOR INDEX segment_transcript_embedding_index IF NOT EXISTS
@@ -157,6 +170,57 @@ class Neo4jClient:
                     m.title_embedding = $title_embedding,
                     m.updated_at = datetime()
             """, media)
+            # #84 uploaded_at：真实上传时间（MySQL upload_time 捎带），首写为准
+            if media.get('uploaded_at'):
+                import datetime as _dt
+                ts = _dt.datetime.fromtimestamp(media['uploaded_at'] / 1000, tz=_dt.timezone.utc)
+                session.run("""
+                    MATCH (m:Media {id: $id})
+                    SET m.uploaded_at = coalesce(m.uploaded_at, $ts)
+                """, {'id': media['id'], 'ts': ts})
+
+    def set_media_uploaded_at(self, media_id: int, uploaded_at_ms: int):
+        """#84 上传时间回填（缓存命中场景 Media 已存在时单独补写；coalesce 首写为准）"""
+        import datetime as _dt
+        ts = _dt.datetime.fromtimestamp(uploaded_at_ms / 1000, tz=_dt.timezone.utc)
+        with self.driver.session() as session:
+            session.run("""
+                MATCH (m:Media {id: $id})
+                SET m.uploaded_at = coalesce(m.uploaded_at, $ts)
+            """, {'id': f"media_{media_id}", 'ts': ts})
+
+    def search_media_by_summary(self, embedding: List[float], group_id: str, top_k: int = 5,
+                                threshold: float = 0.4) -> List[Dict]:
+        """#85 L0 视频级语义检索：按 summary_embedding 精确余弦（group 预过滤，视频量级小不需要 ANN）"""
+        with self.driver.session() as session:
+            result = session.run("""
+                MATCH (m:Media {group_id: $gid})
+                WHERE m.summary_embedding IS NOT NULL
+                WITH m, vector.similarity.cosine(m.summary_embedding, $embedding) AS score
+                WHERE score >= $threshold
+                RETURN m.id AS id, m.title AS title, m.summary AS summary,
+                       m.duration_ms AS duration_ms, m.uploaded_at AS uploaded_at, score
+                ORDER BY score DESC
+                LIMIT $top_k
+            """, {'gid': group_id, 'embedding': embedding, 'top_k': top_k, 'threshold': threshold})
+            return [dict(r) for r in result]
+
+    def get_media_summary(self, media_id: int) -> str | None:
+        """读视频总结（#84 幂等判断用）"""
+        with self.driver.session() as session:
+            r = session.run("MATCH (m:Media {id: $id}) RETURN m.summary AS s",
+                            {'id': f"media_{media_id}"}).single()
+            return r['s'] if r and r['s'] else None
+
+    def update_media_summary(self, media_id: int, summary: str, summary_embedding):
+        """#84 写入视频总结 + 其向量（视频级语义检索用）"""
+        with self.driver.session() as session:
+            session.run("""
+                MATCH (m:Media {id: $id})
+                SET m.summary = $summary,
+                    m.summary_embedding = $emb,
+                    m.updated_at = datetime()
+            """, {'id': f"media_{media_id}", 'summary': summary, 'emb': summary_embedding})
 
     def link_segment_to_media(self, segment_id: str, media_id: str):
         """链接片段到视频"""
@@ -202,7 +266,8 @@ class Neo4jClient:
             """, relationship)
 
     def save_community(self, community: Dict):
-        """保存社区（MERGE 幂等）"""
+        """保存社区（MERGE 幂等；findings 可选，缺省空列表）"""
+        params = {**community, 'findings': community.get('findings') or []}
         with self.driver.session() as session:
             session.run("""
                 MERGE (c:Community {id: $id})
@@ -213,9 +278,10 @@ class Neo4jClient:
                     c.entity_count = $entity_count,
                     c.relationship_count = $relationship_count,
                     c.summary = $summary,
+                    c.findings = $findings,
                     c.summary_embedding = $summary_embedding,
                     c.updated_at = datetime()
-            """, community)
+            """, params)
 
     def save_segment(self, segment: Dict):
         """保存片段（MERGE 幂等）"""
@@ -401,7 +467,7 @@ class Neo4jClient:
             return [dict(r) for r in result]
 
     def find_similar_entities(self, embedding: List[float], group_id: str, top_k: int = 5, threshold: float = 0.5,
-                              media_id: int = None) -> List[Dict]:
+                              media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """向量相似度查询（group 内闭包：B-tree 预过滤 + 精确余弦，召回无损）
         media_id 可选：限定在该视频片段中被提及的实体（单视频问答）"""
         with self.driver.session() as session:
@@ -409,6 +475,7 @@ class Neo4jClient:
                 MATCH (node:Entity {group_id: $gid})
                 WHERE node.name_embedding IS NOT NULL
                   AND ($mid IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(:Segment {media_id: $mid}) })
+                  AND ($mids IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(s2:Segment) WHERE s2.media_id IN $mids })
                 WITH node, vector.similarity.cosine(node.name_embedding, $embedding) AS score
                 WHERE score >= $threshold
                 RETURN node, score
@@ -416,7 +483,7 @@ class Neo4jClient:
                 LIMIT $top_k
             """, {
                 'gid': group_id,
-                'mid': media_id,
+                'mid': media_id, 'mids': media_ids,
                 'top_k': top_k,
                 'embedding': embedding,
                 'threshold': threshold
@@ -431,41 +498,43 @@ class Neo4jClient:
             ]
 
     def search_entities_by_description(self, embedding: List[float], group_id: str, top_k: int = 5, threshold: float = 0.5,
-                                       media_id: int = None) -> List[Dict]:
+                                       media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """按描述向量检索实体（group 内闭包，media_id 可选限定单视频）"""
         with self.driver.session() as session:
             result = session.run("""
                 MATCH (node:Entity {group_id: $gid})
                 WHERE node.description_embedding IS NOT NULL
                   AND ($mid IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(:Segment {media_id: $mid}) })
+                  AND ($mids IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(s2:Segment) WHERE s2.media_id IN $mids })
                 WITH node, vector.similarity.cosine(node.description_embedding, $embedding) AS score
                 WHERE score >= $threshold
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'gid': group_id, 'mid': media_id, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
+            """, {'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
 
             return [{'entity': dict(record['node']), 'score': record['score']} for record in result]
 
     def search_segments(self, embedding: List[float], group_id: str, top_k: int = 5, threshold: float = 0.5,
-                        media_id: int = None) -> List[Dict]:
+                        media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """按 ASR 文本向量检索片段（group 内闭包，media_id 可选限定单视频）"""
         with self.driver.session() as session:
             result = session.run("""
                 MATCH (node:Segment {group_id: $gid})
                 WHERE node.transcript_embedding IS NOT NULL
                   AND ($mid IS NULL OR node.media_id = $mid)
+                  AND ($mids IS NULL OR node.media_id IN $mids)
                 WITH node, vector.similarity.cosine(node.transcript_embedding, $embedding) AS score
                 WHERE score >= $threshold
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'gid': group_id, 'mid': media_id, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
+            """, {'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
 
             return [{'segment': dict(record['node']), 'score': record['score']} for record in result]
 
     def search_communities(self, embedding: List[float], group_id: str, top_k: int = 5, threshold: float = 0.3,
-                           media_id: int = None) -> List[Dict]:
+                           media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """按摘要向量检索社区（group 内闭包；阈值较低：摘要与问题的语义距离天然更远）
         media_id 可选：限定覆盖了该视频片段的社区（单视频问答）"""
         with self.driver.session() as session:
@@ -473,12 +542,13 @@ class Neo4jClient:
                 MATCH (node:Community {group_id: $gid})
                 WHERE node.summary_embedding IS NOT NULL
                   AND ($mid IS NULL OR EXISTS { (node)-[:CONTAINS]->(:Segment {media_id: $mid}) })
+                  AND ($mids IS NULL OR EXISTS { (node)-[:CONTAINS]->(sg2:Segment) WHERE sg2.media_id IN $mids })
                 WITH node, vector.similarity.cosine(node.summary_embedding, $embedding) AS score
                 WHERE score >= $threshold
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'gid': group_id, 'mid': media_id, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
+            """, {'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
 
             return [{'community': dict(record['node']), 'score': record['score']} for record in result]
 
@@ -488,7 +558,7 @@ class Neo4jClient:
         special = '+-=&|><!(){}[]^"~*?:\\/'
         return ''.join('\\' + c if c in special else c for c in query)
 
-    def search_entities_fulltext(self, query: str, group_id: str, top_k: int = 10, media_id: int = None) -> List[Dict]:
+    def search_entities_fulltext(self, query: str, group_id: str, top_k: int = 10, media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """实体全文检索（BM25，group 内闭包，media_id 可选限定单视频）"""
         with self.driver.session() as session:
             result = session.run("""
@@ -496,13 +566,14 @@ class Neo4jClient:
                 YIELD node, score
                 WHERE node.group_id = $gid
                   AND ($mid IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(:Segment {media_id: $mid}) })
+                  AND ($mids IS NULL OR EXISTS { (node)-[:MENTIONED_IN]->(s2:Segment) WHERE s2.media_id IN $mids })
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'top_k': top_k})
+            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k})
             return [{'entity': dict(r['node']), 'score': r['score']} for r in result]
 
-    def search_relationships_fulltext(self, query: str, group_id: str, top_k: int = 10, media_id: int = None) -> List[Dict]:
+    def search_relationships_fulltext(self, query: str, group_id: str, top_k: int = 10, media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """关系全文检索（BM25，group 内闭包，media_id 可选限定单视频来源）"""
         with self.driver.session() as session:
             result = session.run("""
@@ -510,6 +581,7 @@ class Neo4jClient:
                 YIELD relationship, score
                 WHERE relationship.group_id = $gid
                   AND ($mid IS NULL OR ANY(sid IN relationship.source_segment_ids WHERE sid STARTS WITH $mprefix))
+                  AND ($mids IS NULL OR ANY(m_ IN $mids WHERE ANY(sid IN relationship.source_segment_ids WHERE sid STARTS WITH 'media_' + toString(m_) + '_')))
                 MATCH (s)-[relationship]->(t)
                 RETURN s.id as source_id, s.name as source_name,
                        t.id as target_id, t.name as target_name,
@@ -519,18 +591,19 @@ class Neo4jClient:
                        score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id,
+            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'mids': media_ids,
                   'mprefix': f"media_{media_id}_", 'top_k': top_k})
             return [dict(r) for r in result]
 
     def search_relationships_by_vector(self, embedding: List[float], group_id: str, top_k: int = 10, threshold: float = 0.5,
-                                       media_id: int = None) -> List[Dict]:
+                                       media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """关系向量检索（group 内闭包，精确余弦，media_id 可选限定单视频来源）"""
         with self.driver.session() as session:
             result = session.run("""
                 MATCH (s)-[relationship:RELATES_TO]->(t)
                 WHERE relationship.group_id = $gid AND relationship.description_embedding IS NOT NULL
                   AND ($mid IS NULL OR ANY(sid IN relationship.source_segment_ids WHERE sid STARTS WITH $mprefix))
+                  AND ($mids IS NULL OR ANY(m_ IN $mids WHERE ANY(sid IN relationship.source_segment_ids WHERE sid STARTS WITH 'media_' + toString(m_) + '_')))
                 WITH s, relationship, t,
                      vector.similarity.cosine(relationship.description_embedding, $embedding) AS score
                 WHERE score >= $threshold
@@ -542,11 +615,11 @@ class Neo4jClient:
                        score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'gid': group_id, 'mid': media_id, 'mprefix': f"media_{media_id}_",
+            """, {'gid': group_id, 'mid': media_id, 'mids': media_ids, 'mprefix': f"media_{media_id}_",
                   'top_k': top_k, 'embedding': embedding, 'threshold': threshold})
             return [dict(r) for r in result]
 
-    def search_segments_fulltext(self, query: str, group_id: str, top_k: int = 5, media_id: int = None) -> List[Dict]:
+    def search_segments_fulltext(self, query: str, group_id: str, top_k: int = 5, media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """片段全文检索（BM25，group 内闭包，media_id 可选限定单视频）"""
         with self.driver.session() as session:
             result = session.run("""
@@ -554,13 +627,14 @@ class Neo4jClient:
                 YIELD node, score
                 WHERE node.group_id = $gid
                   AND ($mid IS NULL OR node.media_id = $mid)
+                  AND ($mids IS NULL OR node.media_id IN $mids)
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'top_k': top_k})
+            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k})
             return [{'segment': dict(r['node']), 'score': r['score']} for r in result]
 
-    def search_communities_fulltext(self, query: str, group_id: str, top_k: int = 5, media_id: int = None) -> List[Dict]:
+    def search_communities_fulltext(self, query: str, group_id: str, top_k: int = 5, media_id: int = None, media_ids: List[int] = None) -> List[Dict]:
         """社区全文检索（BM25，group 内闭包，media_id 可选限定单视频）"""
         with self.driver.session() as session:
             result = session.run("""
@@ -568,10 +642,11 @@ class Neo4jClient:
                 YIELD node, score
                 WHERE node.group_id = $gid
                   AND ($mid IS NULL OR EXISTS { (node)-[:CONTAINS]->(:Segment {media_id: $mid}) })
+                  AND ($mids IS NULL OR EXISTS { (node)-[:CONTAINS]->(sg2:Segment) WHERE sg2.media_id IN $mids })
                 RETURN node, score
                 ORDER BY score DESC
                 LIMIT $top_k
-            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'top_k': top_k})
+            """, {'query': self._escape_lucene(query), 'gid': group_id, 'mid': media_id, 'mids': media_ids, 'top_k': top_k})
             return [{'community': dict(r['node']), 'score': r['score']} for r in result]
 
     def entity_bfs_search(self, origin_ids: List[str], group_id: str, depth: int = 2, limit: int = 10,
@@ -611,6 +686,18 @@ class Neo4jClient:
             """, {'entity_id': entity_id, 'top_k': top_k})
 
             return [dict(record) for record in result]
+
+    def get_community_top_entities(self, community_id: str, top_k: int = 5) -> List[Dict]:
+        """#A-P2 社区核心实体（按提及次数降序，global 检索下钻用）"""
+        with self.driver.session() as session:
+            result = session.run("""
+                MATCH (e:Entity)-[:BELONGS_TO]->(c:Community {id: $community_id})
+                RETURN e.id AS id, e.name AS name, e.type AS type,
+                       coalesce(e.source_count, 1) AS source_count
+                ORDER BY source_count DESC
+                LIMIT $top_k
+            """, {'community_id': community_id, 'top_k': top_k})
+            return [dict(r) for r in result]
 
     def get_community_segments(self, community_id: str) -> List[Dict]:
         """获取社区关联的片段（追溯）"""

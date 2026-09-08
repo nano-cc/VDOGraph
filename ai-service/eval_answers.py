@@ -23,10 +23,12 @@ from typing import Dict, List
 
 import requests
 
-DATASET_PATH = '/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval_dataset.json'
+import os
+DATASET_PATH = os.environ.get('EVAL_DATASET', '/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval_dataset.json')
+EVAL_USER_ID = int(os.environ.get('EVAL_USER_ID', '2'))  # bench 评测传 4
 REPORT_DIR = Path('/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/reports')
 BASELINE_PATH = Path('/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/baseline.json')
-ANSWERS_CACHE = Path('/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/answers_cache.json')
+ANSWERS_CACHE = Path(f"/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/answers_cache_{os.environ.get('EVAL_USER_ID', '2')}.json")
 
 API_BASE = 'http://localhost:8000/api/v1'
 
@@ -41,7 +43,7 @@ def ask(question: str) -> Dict:
     resp = requests.post(
         f'{API_BASE}/query/ask',
         headers={'Content-Type': 'application/json', 'X-API-Key': get_api_key()},
-        json={'question': question, 'mode': 'auto'},
+        json={'question': question, 'mode': 'auto', 'user_id': EVAL_USER_ID},
         timeout=600
     )
     resp.raise_for_status()

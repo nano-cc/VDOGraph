@@ -8,6 +8,7 @@ L1 检索层评测 harness（完整版）
 import sys
 sys.path.insert(0, '/mnt/Data/projs/Java/DOVideo-AI/ai-service')
 
+import os
 import json
 import asyncio
 import argparse
@@ -16,7 +17,8 @@ from pathlib import Path
 from typing import List, Dict
 from app.services.graph_retriever import GraphRetriever
 
-DATASET_PATH = '/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval_dataset.json'
+DATASET_PATH = os.environ.get('EVAL_DATASET',
+    '/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval_dataset.json')
 REPORT_DIR = Path('/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/reports')
 BASELINE_PATH = Path('/mnt/Data/projs/Java/DOVideo-AI/ai-service/eval/baseline.json')
 
@@ -202,8 +204,9 @@ async def run_eval(dataset_path: str, top_k: int, save: bool, update_baseline: b
         print(f"基线已更新: {BASELINE_PATH}")
 
 
-# 三期后检索强制 group_id；eval 数据集基于历史测试用户 kgtest(id=2)
-GROUP_ID = 'user_2'
+# 三期后检索强制 group_id；默认历史测试用户 kgtest(id=2)，BENCH 账号用环境变量覆盖：
+#   EVAL_GROUP_ID=user_4 EVAL_DATASET=eval_dataset_bench.json python eval_harness.py ...
+GROUP_ID = os.environ.get('EVAL_GROUP_ID', 'user_2')
 
 
 if __name__ == '__main__':

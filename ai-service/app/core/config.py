@@ -11,6 +11,18 @@ class Settings(BaseSettings):
     llm_model: str = "deepseek-ai/DeepSeek-V3.2"
     llm_timeout_seconds: int = 300
 
+    # 分服务独立 key/base_url（2026-09-02：支持多供应商混用，如 LLM 走百炼、ASR 留 SF）
+    # 留空则回退到 siliconflow_api_key / siliconflow_base_url（向后兼容）
+    llm_api_key: str = ""
+    llm_base_url: str = ""
+    embedding_api_key: str = ""
+    embedding_base_url: str = ""
+    asr_api_key: str = ""
+    reranker_api_key: str = ""
+    reranker_base_url: str = ""
+    reranker_model: str = "BAAI/bge-reranker-v2-m3"
+    reranker_path: str = "/rerank"  # 百炼 qwen3-rerank 用 /reranks（compatible-api）
+
     # ASR
     asr_url: str = "https://api.siliconflow.cn/v1/audio/transcriptions"
     asr_model: str = "TeleAI/TeleSpeechASR"
@@ -68,6 +80,13 @@ class Settings(BaseSettings):
 
     # 两跳消歧开关（docs/kg-phase4-commit-optimization.md）：true=commit 走 prepare/apply 新链路
     kg_two_hop: bool = False
+
+    # gleaning 补抽轮数（GraphRAG 式：首轮抽取后让 LLM 自查遗漏，0=关闭）
+    kg_gleaning_rounds: int = 1
+
+    # global search map-reduce（GraphRAG 式：map 阶段逐社区提取与问题相关要点+打分，
+    # reduce 阶段按分过滤组装，治"整段摘要灌进上下文"的污染问题；false=回退整段摘要）
+    kg_global_map_reduce: bool = True
 
     class Config:
         env_file = ".env"

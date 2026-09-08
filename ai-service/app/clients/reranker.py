@@ -27,8 +27,9 @@ class RerankerClient:
         try:
             start = time.time()
             cfg = self._config()
+            # path 可配：SiliconFlow=/rerank，百炼 qwen3-rerank=/reranks（compatible-api）
             response = requests.post(
-                f"{cfg['base_url']}/rerank",
+                f"{cfg['base_url']}{cfg.get('path', '/rerank')}",
                 headers={
                     "Authorization": f"Bearer {cfg['api_key']}",
                     "Content-Type": "application/json"

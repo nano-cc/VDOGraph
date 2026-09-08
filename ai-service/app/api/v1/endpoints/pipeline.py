@@ -19,6 +19,7 @@ class ProcessVideoRequest(BaseModel):
     force: bool = False  # True 时忽略已有处理结果，强制重跑解析和抽取
     attempt: int = 1     # 重投次数（Java watcher 失败重投时递增，仅记录用）
     user_id: int = 0     # 用户隔离（三期），图谱数据落 group_id=user_{user_id}
+    upload_time_ms: int = None  # #84 视频真实上传时间（毫秒戳），写入 Media.uploaded_at
 
 
 class ProcessVideoResponse(BaseModel):
@@ -57,9 +58,10 @@ async def analyze_async(request: ProcessVideoRequest):
     """
     from app.services import kg_task_runner
 
-    logger.info(f"[API] analyze-async: media_id={request.media_id} attempt={request.attempt}")
+    logger.info(f"[API] analyze-async: media_id={request.media_id} attempt={request.attempt} upload_time_ms={request.upload_time_ms}")
     result = await kg_task_runner.start_analyze(request.media_id, request.video_path,
-                                                attempt=request.attempt, user_id=request.user_id)
+                                                attempt=request.attempt, user_id=request.user_id,
+                                                upload_time_ms=request.upload_time_ms)
     if result == kg_task_runner.BUSY:
         raise HTTPException(status_code=429, detail="analyze 并发已达上限，请稍后重试")
     return {

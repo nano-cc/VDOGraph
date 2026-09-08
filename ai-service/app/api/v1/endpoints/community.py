@@ -3,9 +3,11 @@
 """
 import time
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from app.models.community import CommunityDetectRequest, CommunityDetectResponse
 from app.services.community_detector import CommunityDetector
+from app.services import community_rebuilder
 from app.core.logging import logger, log_request, log_response, log_performance
 
 router = APIRouter()
@@ -47,3 +49,16 @@ async def detect_communities(request: CommunityDetectRequest):
 
         logger.error(f"Failed to detect communities: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class RebuildRequest(BaseModel):
+    group_id: str
+    min_singleton_ratio: float = 0.0  # >0 时 singleton 占比低于阈值则跳过
+
+
+@router.post("/rebuild")
+async def rebuild_communities(request: RebuildRequest):
+    """#83 全量 Leiden 社区重建（异步投递，与增量更新共用 per-group 社区锁）"""
+    log_request("/api/v1/community/rebuild", {"group_id": request.group_id})
+    status = await community_rebuilder.start_rebuild(request.group_id, request.min_singleton_ratio)
+    return {"status": status, "group_id": request.group_id}

@@ -1,0 +1,1090 @@
+{
+  "timestamp": "20260902-125952",
+  "top_k": 5,
+  "summary": {
+    "total": 49,
+    "hit_at_5": 0.7142857142857143,
+    "mrr": 0.3433565278317092,
+    "macro_precision": 0.1153061224489796,
+    "macro_recall": 0.37244897959183676,
+    "macro_f1": 0.16924198250728867,
+    "avg_pollution": 0.22448979591836735,
+    "by_type": {
+      "cross": {
+        "count": 2,
+        "hit_at_5": 1.0,
+        "mrr": 1.0,
+        "macro_f1": 0.33333333333333337
+      },
+      "global": {
+        "count": 9,
+        "hit_at_5": 0.0,
+        "mrr": 0.0,
+        "macro_f1": 0.0
+      },
+      "local": {
+        "count": 24,
+        "hit_at_5": 0.9166666666666666,
+        "mrr": 0.20796402210085074,
+        "macro_f1": 0.11785714285714287
+      },
+      "segment": {
+        "count": 14,
+        "hit_at_5": 0.7857142857142857,
+        "mrr": 0.7023809523809524,
+        "macro_f1": 0.34268707482993205
+      }
+    }
+  },
+  "details": [
+    {
+      "id": "beef-01",
+      "type": "local",
+      "question": "今年开始搞的牛肉进口配额到底有多少吨？超了配额要多交多少关税？",
+      "hit": true,
+      "rank": 3,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_45_segment_5",
+        "media_45_segment_4",
+        "media_45_segment_0",
+        "media_45_segment_3",
+        "media_45_segment_1"
+      ],
+      "expected": [
+        "media_45_segment_0"
+      ]
+    },
+    {
+      "id": "beef-02",
+      "type": "local",
+      "question": "2024年国内肉牛养殖行业一共亏了多少钱？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.25,
+      "recall": 1.0,
+      "f1": 0.4,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_45_segment_1",
+        "media_45_segment_4",
+        "media_45_segment_2",
+        "media_45_segment_11"
+      ],
+      "expected": [
+        "media_45_segment_1"
+      ]
+    },
+    {
+      "id": "beef-03",
+      "type": "local",
+      "question": "视频里说巴西养一头牛的成本跟中国比差多少？",
+      "hit": true,
+      "rank": 12,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.6,
+      "retrieved": [
+        "media_44_segment_6",
+        "media_44_segment_11",
+        "media_45_segment_5",
+        "media_44_segment_1",
+        "media_45_segment_4"
+      ],
+      "expected": [
+        "media_45_segment_8"
+      ]
+    },
+    {
+      "id": "beef-04",
+      "type": "local",
+      "question": "2019年那会儿牛肉进口量涨得有多猛？",
+      "hit": true,
+      "rank": 4,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.2,
+      "retrieved": [
+        "media_45_segment_5",
+        "media_45_segment_0",
+        "media_45_segment_2",
+        "media_45_segment_3",
+        "media_48_segment_31"
+      ],
+      "expected": [
+        "media_45_segment_3"
+      ]
+    },
+    {
+      "id": "beef-05",
+      "type": "segment",
+      "question": "视频里说的\"北牛南养\"是个啥模式？具体怎么操作的？",
+      "hit": true,
+      "rank": 2,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_45_segment_7",
+        "media_45_segment_6",
+        "media_45_segment_9",
+        "media_45_segment_5",
+        "media_45_segment_8"
+      ],
+      "expected": [
+        "media_45_segment_6"
+      ]
+    },
+    {
+      "id": "beef-06",
+      "type": "segment",
+      "question": "视频里是怎么形容巴西和阿根廷的草场条件的？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_45_segment_7",
+        "media_45_segment_8",
+        "media_48_segment_32",
+        "media_45_segment_11",
+        "media_46_segment_5"
+      ],
+      "expected": [
+        "media_45_segment_7"
+      ]
+    },
+    {
+      "id": "beef-07",
+      "type": "global",
+      "question": "看完这个视频，为什么国产牛肉价格就是降不下来、打不过国外？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_45_segment_5",
+        "media_45_segment_6",
+        "media_45_segment_7",
+        "media_45_segment_8"
+      ]
+    },
+    {
+      "id": "hist-01",
+      "type": "local",
+      "question": "视频开头说法国战败后签的那个合约，具体赔了多少钱、割了哪块地？",
+      "hit": true,
+      "rank": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_46_segment_40",
+        "media_46_segment_1",
+        "media_46_segment_3",
+        "media_46_segment_36",
+        "media_46_segment_35"
+      ],
+      "expected": [
+        "media_46_segment_0"
+      ]
+    },
+    {
+      "id": "hist-02",
+      "type": "local",
+      "question": "甘必大是怎么逃出被围的巴黎去搬救兵的？",
+      "hit": true,
+      "rank": 25,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_46_segment_42",
+        "media_46_segment_40",
+        "media_46_segment_27",
+        "media_46_segment_3",
+        "media_46_segment_13"
+      ],
+      "expected": [
+        "media_46_segment_4"
+      ]
+    },
+    {
+      "id": "hist-03",
+      "type": "local",
+      "question": "围城的时候巴黎普通工人一天的工资能买到啥？",
+      "hit": true,
+      "rank": 46,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_46_segment_42",
+        "media_46_segment_40",
+        "media_46_segment_27",
+        "media_46_segment_3",
+        "media_46_segment_8"
+      ],
+      "expected": [
+        "media_46_segment_10"
+      ]
+    },
+    {
+      "id": "hist-04",
+      "type": "local",
+      "question": "巴黎公社一共存在了多久？最后是被谁联手灭掉的？",
+      "hit": true,
+      "rank": 42,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_46_segment_42",
+        "media_46_segment_40",
+        "media_46_segment_27",
+        "media_46_segment_3",
+        "media_46_segment_5"
+      ],
+      "expected": [
+        "media_46_segment_31"
+      ]
+    },
+    {
+      "id": "hist-05",
+      "type": "segment",
+      "question": "视频里说巴黎公社给自家官员定的工资上限是多少？这标准怎么定的？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_46_segment_28",
+        "media_46_segment_29",
+        "media_46_segment_27",
+        "media_46_segment_30",
+        "media_46_segment_48"
+      ],
+      "expected": [
+        "media_46_segment_28"
+      ]
+    },
+    {
+      "id": "hist-06",
+      "type": "segment",
+      "question": "《国际歌》这首歌是怎么来的？视频里怎么讲的？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_46_segment_47",
+        "media_46_segment_48",
+        "media_46_segment_49",
+        "media_45_segment_1",
+        "media_48_segment_8"
+      ],
+      "expected": [
+        "media_46_segment_47",
+        "media_46_segment_48"
+      ]
+    },
+    {
+      "id": "hist-07",
+      "type": "global",
+      "question": "这个视频觉得巴黎公社为什么会失败？自身和外部原因都聊聊。",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_46_segment_31",
+        "media_46_segment_32",
+        "media_46_segment_35",
+        "media_46_segment_36"
+      ]
+    },
+    {
+      "id": "hist2-01",
+      "type": "local",
+      "question": "特洛伊战争在视频里被归到哪个时期？",
+      "hit": true,
+      "rank": 12,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 1.0,
+      "retrieved": [
+        "media_46_segment_46",
+        "media_46_segment_35",
+        "media_46_segment_14",
+        "media_44_segment_2",
+        "media_48_segment_31"
+      ],
+      "expected": [
+        "media_47_segment_0"
+      ]
+    },
+    {
+      "id": "hist2-02",
+      "type": "local",
+      "question": "视频里亚历山大死后，他的大帝国落得什么下场？",
+      "hit": true,
+      "rank": 7,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.8,
+      "retrieved": [
+        "media_46_segment_33",
+        "media_46_segment_49",
+        "media_47_segment_6",
+        "media_46_segment_36",
+        "media_46_segment_35"
+      ],
+      "expected": [
+        "media_47_segment_1"
+      ]
+    },
+    {
+      "id": "hist2-03",
+      "type": "local",
+      "question": "视频里说哪个皇帝把罗马帝国分成东西两块？搞的那个制度叫啥？",
+      "hit": true,
+      "rank": 13,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.8,
+      "retrieved": [
+        "media_46_segment_33",
+        "media_46_segment_49",
+        "media_47_segment_6",
+        "media_46_segment_36",
+        "media_46_segment_38"
+      ],
+      "expected": [
+        "media_47_segment_3"
+      ]
+    },
+    {
+      "id": "hist2-04",
+      "type": "segment",
+      "question": "视频里是怎么解释法兰克王国为啥突然碎成三块的？",
+      "hit": false,
+      "rank": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 1.0,
+      "retrieved": [
+        "media_48_segment_5",
+        "media_46_segment_40",
+        "media_48_segment_32",
+        "media_48_segment_3",
+        "media_44_segment_9"
+      ],
+      "expected": [
+        "media_47_segment_5"
+      ]
+    },
+    {
+      "id": "hist2-05",
+      "type": "segment",
+      "question": "视频里是怎么调侃哥伦布的？",
+      "hit": false,
+      "rank": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 1.0,
+      "retrieved": [
+        "media_45_segment_8",
+        "media_48_segment_32",
+        "media_46_segment_48",
+        "media_48_segment_5",
+        "media_44_segment_13"
+      ],
+      "expected": [
+        "media_47_segment_9"
+      ]
+    },
+    {
+      "id": "hist2-06",
+      "type": "global",
+      "question": "这个视频整体上按什么脉络把欧洲史串了一遍？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_47_segment_0",
+        "media_47_segment_10",
+        "media_47_segment_11",
+        "media_47_segment_3",
+        "media_47_segment_5",
+        "media_47_segment_8"
+      ]
+    },
+    {
+      "id": "boston1-01",
+      "type": "local",
+      "question": "林肯号航母上水兵的伙食被削减成什么样了？",
+      "hit": false,
+      "rank": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_43_segment_0",
+        "media_47_segment_9",
+        "media_43_segment_5",
+        "media_44_segment_9",
+        "media_43_segment_9"
+      ],
+      "expected": [
+        "media_43_segment_3"
+      ]
+    },
+    {
+      "id": "boston1-02",
+      "type": "local",
+      "question": "按视频里的说法，海上部署多长时间算正常，林肯号已经部署多久了？",
+      "hit": false,
+      "rank": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.6,
+      "retrieved": [
+        "media_43_segment_0",
+        "media_43_segment_3",
+        "media_45_segment_11",
+        "media_44_segment_9",
+        "media_46_segment_18"
+      ],
+      "expected": [
+        "media_43_segment_2"
+      ]
+    },
+    {
+      "id": "boston1-03",
+      "type": "segment",
+      "question": "视频里说的美国海军的\"三分之一法则\"具体是啥意思？是在哪一段讲的？",
+      "hit": true,
+      "rank": 3,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_43_segment_2",
+        "media_43_segment_0",
+        "media_43_segment_7",
+        "media_45_segment_8",
+        "media_48_segment_32"
+      ],
+      "expected": [
+        "media_43_segment_7"
+      ]
+    },
+    {
+      "id": "boston1-04",
+      "type": "local",
+      "question": "视频里提到哪位舰长因为替手下士兵说话结果被撤职了？",
+      "hit": true,
+      "rank": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_43_segment_0",
+        "media_43_segment_3",
+        "media_45_segment_11",
+        "media_43_segment_5",
+        "media_44_segment_9"
+      ],
+      "expected": [
+        "media_43_segment_9"
+      ]
+    },
+    {
+      "id": "boston1-05",
+      "type": "segment",
+      "question": "\"士气下降60%多甚至出现幻觉对友军开火\"这个说法出自视频哪部分？依据是什么？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.6,
+      "retrieved": [
+        "media_43_segment_11",
+        "media_43_segment_10",
+        "media_46_segment_3",
+        "media_45_segment_8",
+        "media_46_segment_49"
+      ],
+      "expected": [
+        "media_43_segment_11"
+      ]
+    },
+    {
+      "id": "boston1-06",
+      "type": "global",
+      "question": "这个视频整体上讲，林肯号的水兵为什么会被逼到想跳海？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_43_segment_1",
+        "media_43_segment_2",
+        "media_43_segment_3",
+        "media_43_segment_4",
+        "media_43_segment_5"
+      ]
+    },
+    {
+      "id": "boston2-01",
+      "type": "local",
+      "question": "8月15号这次高市早苗是怎么\"拜鬼\"的？她本人去了吗？",
+      "hit": true,
+      "rank": 3,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "pollution": 0.2,
+      "retrieved": [
+        "media_44_segment_6",
+        "media_45_segment_11",
+        "media_44_segment_1",
+        "media_44_segment_9",
+        "media_44_segment_0"
+      ],
+      "expected": [
+        "media_44_segment_0",
+        "media_44_segment_1"
+      ]
+    },
+    {
+      "id": "boston2-02",
+      "type": "local",
+      "question": "高市早苗当选的时候，日本选民最关心什么议题？视频里有具体比例吗？",
+      "hit": true,
+      "rank": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_45_segment_11",
+        "media_44_segment_1",
+        "media_44_segment_3",
+        "media_44_segment_0",
+        "media_45_segment_3"
+      ],
+      "expected": [
+        "media_44_segment_2"
+      ]
+    },
+    {
+      "id": "boston2-03",
+      "type": "segment",
+      "question": "视频里说日本右翼用AI篡改投降相关文件，具体是怎么改的？这在哪一段？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_44_segment_6",
+        "media_44_segment_13",
+        "media_44_segment_14",
+        "media_44_segment_3",
+        "media_44_segment_10"
+      ],
+      "expected": [
+        "media_44_segment_6"
+      ]
+    },
+    {
+      "id": "boston2-04",
+      "type": "local",
+      "question": "小时候杂志上那个日本人刷马桶刷到敢喝马桶水的故事，主角是谁？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_44_segment_8",
+        "media_45_segment_11",
+        "media_44_segment_2",
+        "media_44_segment_7",
+        "media_47_segment_11"
+      ],
+      "expected": [
+        "media_44_segment_7",
+        "media_44_segment_8"
+      ]
+    },
+    {
+      "id": "boston2-05",
+      "type": "global",
+      "question": "这个视频认为日本是怎样系统性地歪曲二战历史的？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_44_segment_4",
+        "media_44_segment_5",
+        "media_44_segment_6"
+      ]
+    },
+    {
+      "id": "boston2-06",
+      "type": "segment",
+      "question": "视频里关于昭和天皇对靖国神社合祀甲级战犯的态度是怎么说的？出自哪部分？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_44_segment_12",
+        "media_44_segment_13",
+        "media_44_segment_14",
+        "media_44_segment_3",
+        "media_44_segment_4"
+      ],
+      "expected": [
+        "media_44_segment_12",
+        "media_44_segment_13"
+      ]
+    },
+    {
+      "id": "boston2-07",
+      "type": "local",
+      "question": "台湾原住民跟靖国神社有什么纠葛？",
+      "hit": true,
+      "rank": 14,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.2,
+      "retrieved": [
+        "media_44_segment_15",
+        "media_44_segment_8",
+        "media_45_segment_11",
+        "media_44_segment_1",
+        "media_44_segment_3"
+      ],
+      "expected": [
+        "media_44_segment_13",
+        "media_44_segment_14"
+      ]
+    },
+    {
+      "id": "llm-01",
+      "type": "local",
+      "question": "视频里列了几个主流大模型的上下文窗口，分别有多大？",
+      "hit": true,
+      "rank": 17,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_48_segment_11",
+        "media_48_segment_12",
+        "media_48_segment_5",
+        "media_48_segment_21",
+        "media_48_segment_23"
+      ],
+      "expected": [
+        "media_48_segment_10"
+      ]
+    },
+    {
+      "id": "llm-02",
+      "type": "local",
+      "question": "一个token大概相当于几个字啊？",
+      "hit": true,
+      "rank": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_48_segment_5",
+        "media_48_segment_0",
+        "media_48_segment_29",
+        "media_48_segment_8",
+        "media_48_segment_9"
+      ],
+      "expected": [
+        "media_48_segment_7"
+      ]
+    },
+    {
+      "id": "llm-03",
+      "type": "segment",
+      "question": "视频里拿\"程序员\"这个词和英文单词helpful举例，是想说明什么？这部分在哪？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_48_segment_7",
+        "media_48_segment_6",
+        "media_48_segment_2",
+        "media_48_segment_5",
+        "media_48_segment_8"
+      ],
+      "expected": [
+        "media_48_segment_6",
+        "media_48_segment_7"
+      ]
+    },
+    {
+      "id": "llm-04",
+      "type": "local",
+      "question": "在Claude Code里存一个Agent Skill，文件放哪、叫什么名字有什么讲究？",
+      "hit": true,
+      "rank": 4,
+      "precision": 0.2,
+      "recall": 0.5,
+      "f1": 0.28571428571428575,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_48_segment_25",
+        "media_48_segment_24",
+        "media_48_segment_30",
+        "media_48_segment_28",
+        "media_48_segment_20"
+      ],
+      "expected": [
+        "media_48_segment_27",
+        "media_48_segment_28"
+      ]
+    },
+    {
+      "id": "llm-05",
+      "type": "global",
+      "question": "大模型自己又没有记忆，它是怎么记住我前面聊过的东西的？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_48_segment_8",
+        "media_48_segment_9"
+      ]
+    },
+    {
+      "id": "llm-06",
+      "type": "segment",
+      "question": "视频里说大模型其实不能真正自己去调用工具，那是谁在调？这个说法在哪段讲的？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.6,
+      "recall": 1.0,
+      "f1": 0.7499999999999999,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_48_segment_17",
+        "media_48_segment_19",
+        "media_48_segment_22",
+        "media_48_segment_18",
+        "media_48_segment_32"
+      ],
+      "expected": [
+        "media_48_segment_17",
+        "media_48_segment_18",
+        "media_48_segment_19"
+      ]
+    },
+    {
+      "id": "llm-07",
+      "type": "global",
+      "question": "这个视频从头到尾搭了一套AI概念体系，能说说都讲了哪些层吗？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_48_segment_30",
+        "media_48_segment_31",
+        "media_48_segment_32"
+      ]
+    },
+    {
+      "id": "phone-01",
+      "type": "local",
+      "question": "用了9个月之后，哪台手机系统里显示的电池健康度掉得最多？掉到多少了？",
+      "hit": true,
+      "rank": 3,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_49_segment_19",
+        "media_49_segment_6",
+        "media_49_segment_5",
+        "media_48_segment_0",
+        "media_48_segment_29"
+      ],
+      "expected": [
+        "media_49_segment_5"
+      ]
+    },
+    {
+      "id": "phone-02",
+      "type": "local",
+      "question": "在新的6.0续航模型下，这11台自用机里续航最短的是哪台？具体能撑多久？",
+      "hit": true,
+      "rank": 18,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_49_segment_19",
+        "media_49_segment_0",
+        "media_49_segment_24",
+        "media_49_segment_8",
+        "media_49_segment_15"
+      ],
+      "expected": [
+        "media_49_segment_10"
+      ]
+    },
+    {
+      "id": "phone-03",
+      "type": "local",
+      "question": "谁的手机存储用得最狠？用了多少空间？",
+      "hit": true,
+      "rank": 6,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.2,
+      "retrieved": [
+        "media_49_segment_25",
+        "media_45_segment_11",
+        "media_49_segment_8",
+        "media_49_segment_30",
+        "media_49_segment_10"
+      ],
+      "expected": [
+        "media_49_segment_4"
+      ]
+    },
+    {
+      "id": "phone-04",
+      "type": "segment",
+      "question": "视频里提到11台手机里只有一台出现了烧屏痕迹，这个内容是在哪一段说的？具体是哪台手机、怎么烧的？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_49_segment_25",
+        "media_49_segment_3",
+        "media_49_segment_21",
+        "media_49_segment_2",
+        "media_49_segment_15"
+      ],
+      "expected": [
+        "media_49_segment_25"
+      ]
+    },
+    {
+      "id": "phone-05",
+      "type": "segment",
+      "question": "有个机主为了给手机散热，在手机和背板之间塞了块均热板，这个细节出自视频哪个部分？视频是怎么评价这个操作的？",
+      "hit": false,
+      "rank": null,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.2,
+      "retrieved": [
+        "media_49_segment_28",
+        "media_49_segment_20",
+        "media_49_segment_25",
+        "media_49_segment_22",
+        "media_45_segment_8"
+      ],
+      "expected": [
+        "media_49_segment_27"
+      ]
+    },
+    {
+      "id": "phone-06",
+      "type": "global",
+      "question": "整体来看，手机用久了主要哪些地方会变差？视频给了什么延长手机寿命的建议？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_49_segment_28"
+      ]
+    },
+    {
+      "id": "phone-07",
+      "type": "global",
+      "question": "这个视频最后评奖环节，哪些手机在长时间使用后综合表现比较受认可？",
+      "hit": false,
+      "rank": null,
+      "precision": 0,
+      "recall": 0.0,
+      "f1": 0,
+      "pollution": 0.0,
+      "retrieved": [],
+      "expected": [
+        "media_49_segment_29"
+      ]
+    },
+    {
+      "id": "cross-01",
+      "type": "cross",
+      "question": "波士顿圆脸2里说高市早苗这次没亲自去参拜是怕给美国添麻烦，美国当时摊上什么事了？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.2,
+      "recall": 0.25,
+      "f1": 0.22222222222222224,
+      "pollution": 0.0,
+      "retrieved": [
+        "media_43_segment_0",
+        "media_44_segment_6",
+        "media_44_segment_1",
+        "media_44_segment_10",
+        "media_44_segment_3"
+      ],
+      "expected": [
+        "media_43_segment_0",
+        "media_43_segment_1",
+        "media_43_segment_2",
+        "media_44_segment_9"
+      ]
+    },
+    {
+      "id": "cross-02",
+      "type": "cross",
+      "question": "特朗普在这两个视频里都被提到了，他在这两件事里分别是什么角色？",
+      "hit": true,
+      "rank": 1,
+      "precision": 0.4,
+      "recall": 0.5,
+      "f1": 0.4444444444444445,
+      "pollution": 0.4,
+      "retrieved": [
+        "media_43_segment_0",
+        "media_43_segment_3",
+        "media_45_segment_11",
+        "media_44_segment_9",
+        "media_49_segment_30"
+      ],
+      "expected": [
+        "media_43_segment_0",
+        "media_43_segment_7",
+        "media_43_segment_8",
+        "media_44_segment_9"
+      ]
+    },
+    {
+      "id": "oos-01",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-02",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-03",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-04",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-05",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-06",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-07",
+      "type": "oos",
+      "skipped": true
+    },
+    {
+      "id": "oos-08",
+      "type": "oos",
+      "skipped": true
+    }
+  ]
+}

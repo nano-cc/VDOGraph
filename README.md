@@ -1,256 +1,168 @@
 <div align="center">
-  <h2>DoVideoAI</h2>
-  
+  <h2>VideoGraph</h2>
+
   <p>
     <a href="https://github.com/Xiaoc7r/DOVideo-AI/stargazers"><img src="https://img.shields.io/github/stars/Xiaoc7r/DOVideo-AI?style=flat-square" alt="GitHub Stars"></a>
     <img src="https://img.shields.io/badge/Java-21-E76F00?style=flat-square" alt="Java 21">
     <img src="https://img.shields.io/badge/Spring%20Boot-3.5.9-6DB33F?style=flat-square" alt="Spring Boot 3.5.9">
+    <img src="https://img.shields.io/badge/Python-FastAPI-009688?style=flat-square" alt="FastAPI">
+    <img src="https://img.shields.io/badge/Neo4j-5-4581C3?style=flat-square" alt="Neo4j">
     <img src="https://img.shields.io/badge/Vue-3-42B883?style=flat-square" alt="Vue 3">
-    <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=flat-square" alt="MySQL 8">
-    <img src="https://img.shields.io/badge/Redis-7-DC382D?style=flat-square" alt="Redis 7">
     <img src="https://img.shields.io/badge/RocketMQ-5.3.4-D77310?style=flat-square" alt="RocketMQ 5.3.4">
-    <img src="https://img.shields.io/badge/LangChain4j-Agent-20232A?style=flat-square" alt="LangChain4j">
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License"></a>
   </p>
 </div>
 
 <div align="center">
 
-面向长视频内容理解的 <strong>Video Agent</strong>。
+视频知识图谱构建与问答系统。
 
-致力于将长视频转化为可检索、可追溯、可继续追问的结构化知识。
-
+视频经 S3 直传入库后，由消息队列驱动**静音感知分片解析**（ASR + 关键帧 OCR）、LLM 实体关系抽取与**两级实体消解**写入 Neo4j 知识图谱，最终基于**多 Agent 编排**实现可溯源到视频片段的多轮问答，支持多用户数据隔离。
 
 </div>
 
 ## 项目预览
 
-**登录与注册**
+**视频资料库（封面 / 时长 / 构建状态 / 内容总结）**
 
-![DoVideoAI 登录与注册](docs/images/login-register.png)
+![视频资料库](docs/images/video-library.png)
 
-**视频工作台**
+**全局知识图谱（社区划分面板 + 力导图，可缩放/聚焦）**
 
-![DoVideoAI 视频工作台](docs/images/video-library.png)
+![全局知识图谱](docs/images/graph-view.png)
 
-**Agent 目标输入**
+**多 Agent 问答（内嵌引用锚点，点击回放对应视频片段）**
 
-![DoVideoAI Agent 目标输入](docs/images/agent-compose.png)
+![多 Agent 问答](docs/images/qa-citations.png)
 
-**Agent 分析结果**
+## 架构
 
-<img width="2886" height="1656" alt="b89cf519f7189cf823507d5c17b0d88d" src="https://github.com/user-attachments/assets/8bfeed0e-28df-4527-86bf-e549f5516dcc" />
-
-<img width="1776" height="1708" alt="a52abccc6447591c6f9a66ad948c5709" src="https://github.com/user-attachments/assets/9e04ecca-a2a5-4d59-89d7-8f4329858070" />
-
-
-
-用户完成登录后，可以上传视频并在工作台管理解析任务；选择视频并输入分析目标后，可以手动选择分析模式，也可以交给 Agent 自动判断。工作台会展示结构化结论、时间戳证据、执行计划、阶段轨迹与质量评估，并支持基于同一视频继续追问。
+```text
+Vue 3 前端（上传 / 视频库 / 问答 三 Tab）
+   │  S3 预签名分片直传（XXH3-128 内容指纹：秒传 / 断点续传）
+   ▼
+Java Spring Boot（编排层）
+   │  ├─ MySQL：任务状态机（条件更新事实源）、会话历史
+   │  ├─ Redis：心跳 / 进度热数据、Redisson 分布式锁、运行时模型配置
+   │  └─ RocketMQ：解析 / 写图 两阶段消息（投递即返回）
+   ▼  HTTP 投递 + 回调推进状态
+Python FastAPI（AI 计算层）
+   │  ├─ 解析：ffmpeg 静音检测分片 → ASR → 关键帧 OCR（无锁并发）
+   │  ├─ 抽取：LLM 实体关系 + gleaning 自查补抽（OCR 术语作拼写基准）
+   │  ├─ 写图：两级实体消解 → 实体级细粒度锁两阶段提交 → Leiden 社区
+   │  └─ 问答：DeepAgents 多 Agent 编排（视频级粗筛 + 多路召回 + RRF + 重排）
+   ▼
+Neo4j（图谱 + 向量属性） + MinIO（视频 / 关键帧 / 封面）
+```
 
 ## 核心功能
 
-长视频处理天然是**长耗时、高资源消耗、外部调用成本敏感**的场景。DoVideoAI 的设计都围绕这一背景展开，可以概括为四层能力。
+### 🎬 视频导入
+- 前端扩展名 / 魔数（识别真实容器防伪装）/ 大小三重校验，流式计算 XXH3-128 内容指纹（~3GB/s）
+- S3 预签名分片直传：秒传、断点续传、ListParts 权威校验、ffprobe 内容校验、Redisson 锁防并发重复写入
+- B 站 / YouTube / 抖音链接导入（yt-dlp），上传完成自动生成封面与时长
 
-### 🎬 可靠的视频任务链路
+### ⚙️ 长任务异步编排
+- 解析 → 写图两阶段 RocketMQ 消息，投递即返回；MySQL 任务表状态机事实源（全条件更新），Redis 承载心跳/进度
+- 看门狗定时对账：卡点超时按指数退避重投；**fencing token（attempt）+ 重试预算拆分**——背压排队不烧重试预算，僵尸执行体心跳/回调双重拦截（Lua 条件写入自我中止）
+- 失败任务前端可手动重试（预算重置、立即重投）；卡片展示完整构建生命周期
 
-> 把大文件上传与耗时的视频解析从请求主链路中剥离，提交即返回，不阻塞、不重复烧钱。
+### 🧩 知识图谱构建
+- **静音感知分片**：ffmpeg silencedetect 找语义边界（30–90s 窗口 / 60s 目标），硬切侧 8s 音频补偿，关键帧核心区间唯一归属
+- **两级实体消解**：规则层（规范化哈希 + 3-gram Jaccard + 信息熵门控，零 LLM 吃掉 26–44% 明确合并）+ 语义层（批量 LLM 判重，调用量 ↓95%）
+- **两阶段提交**：prepare 锁外决策（LLM 全在此，多视频并行）→ apply 实体级细粒度锁写入（KgMultiLock 排序加锁防死锁）；幻影检查防并发重复——11 分钟视频写图 11min → 141s
+- **社区发现**：Leiden 算法（固定 seed），增量归属（邻居投票 → 向量+LLM → singleton 保底）+ 每天凌晨全量重建纠偏
+- **视频级总结**：analyze 后自动生成整视频内容简介（超长分层压缩）+ 向量，卡片展示与视频级语义检索共用
 
-- **分片上传 + 断点续传** — 前端按 5 MB 分片，Redis 记录已完成分片，MinIO 保存合并后的视频，弱网中断后可从断点续传。
-- **异步削峰** — RocketMQ 将视频解析移出请求线程，提交后立即返回任务 ID；Redisson 按「内容指纹 + 分析目标」加锁，拦截并发与重复消费。
-- **成本护栏** — 用户级与全局令牌桶限制 AI 请求速率；ASR 与模型调用采用有限次数的指数退避重试，兜底第三方网络抖动。
+### 🔍 检索与多 Agent 问答
+- **检索漏斗**：L0 视频级粗筛（总结向量，"这题跟哪几个视频有关"）→ 实体关系 / 主题社区 / 原文片段三路召回（均可按候选视频范围过滤）→ RRF 融合 → cross-encoder 精排
+- **DeepAgents 编排**：主 Agent 按问题复杂度自主检索（视频级粗筛 / 三路检索），复杂问题并行派发子 Agent（细节研究 / 主题分析）；QuickJS 沙箱供计算
+- **可溯源**：答案内嵌〔媒体X mm:ss〕引用锚点，点击从对应时点回放；溯源卡片展示证据帧与原文
 
-### 🧩 时序多模态 VideoContext
-
-> 把语音、画面文字与时间戳融合成一份可检索、可校验的统一上下文。
-
-- **双分支抽取** — FFmpeg 将音频按 60 秒切片，同时通过场景变化检测抽取关键帧，并以 30 秒保底采样避免遗漏静态板书。
-- **并行与容错** — ASR 与 OCR 使用独立有界线程池并行执行；相邻画面通过感知哈希去重，单路失败时仍保留另一条有效信息。
-- **统一结构** — 语音区间、OCR 文本、关键帧与时间戳被合并为统一的 `VideoSegment`，后续检索与校验不再依赖底层模型格式。
-
-```text
-[02:00 - 03:00]
-ASR      接下来讲解二叉树的前序遍历
-OCR      前序遍历：根节点、左子树、右子树
-Evidence frame_000125.jpg
-```
-
-### 🔁 有证据约束的 AgentLoop
-
-> 每条结论都必须绑定可在原始视频中核验的时间戳证据，拒绝模型自由发挥。
-
-- **角色分工** — Planner 将用户目标拆成可执行任务，Executor 生成固定结构的结论、证据与建议。
-- **闭环校验** — Critic 检查目标覆盖、结构完整性与时间戳证据；不通过时依据缺失内容和时间范围定向重新检索。
-- **自动模式路由** — 根据用户目标自动选择通用、学习、审查或创作模式；路由不可用时回退通用模式，不阻断分析任务。
-- **四类结构化产物** — 通用模式生成结论与建议，学习模式生成大纲、自测题与易错点，审查模式定位逻辑漏洞与存疑结论，创作模式提取爆点、标题与口播脚本。
-- **成本可控** — AgentLoop 最多执行两轮，既允许定向修正，也通过轮次上限约束延迟与 Token 成本。
-
-### 🔍 长视频检索与断点恢复
-
-> 面向数小时长视频的分段检索，以及分阶段可恢复的任务状态机。
-
-- **混合检索** — 每 5 分钟生成片段摘要、关键词与 Embedding，通过关键词匹配与 Qdrant 语义召回选出 TopK 原始证据。
-- **优雅降级** — Qdrant 或 Embedding 服务不可用时，退化到本地关键词与已有向量排序，不阻断主分析链路。
-- **断点恢复** — Checkpoint 以 MySQL 为恢复真源、Redis 为热缓存，持久化 `VideoContext`、分块、计划、Critic 状态与最终结果。
-- **状态可观测** — 前端通过 SSE 接收任务阶段；失败消息写入独立失败主题与失败任务表，可由管理接口重新投递。
-
-## 系统流程
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as 用户
-    participant Web as Vue 工作台
-    participant API as Spring Boot API
-    participant MQ as RocketMQ
-    participant Worker as 分析消费者
-    participant Context as VideoContext
-    participant Search as Qdrant 检索
-    participant Agent as AgentLoop
-    participant State as MySQL + Redis
-
-    User->>Web: 上传视频并填写分析目标
-    Web->>API: 分片上传与合并
-    API->>MQ: 投递视频分析任务
-    API-->>Web: 返回 202 Accepted
-    MQ->>Worker: 异步消费
-    Worker->>State: 查询幂等结果与 Checkpoint
-
-    alt 已存在可恢复结果
-        State-->>Worker: 返回最近成功阶段
-    else 首次解析
-        par 语音分支
-            Worker->>Context: FFmpeg 分段 + ASR
-        and 视觉分支
-            Worker->>Context: 关键帧抽取 + OCR
-        end
-        Context->>State: 保存时序多模态上下文
-    end
-
-    Worker->>Search: 摘要、关键词与 Embedding 混合检索
-    Search-->>Agent: 返回相关原始证据
-    loop Critic 未通过且未达到两轮
-        Agent->>Agent: Planner -> Executor -> Critic
-        Agent->>Search: 按反馈定向补充证据
-    end
-    Agent->>State: 保存结构化结果与 Checkpoint
-    Worker-->>Web: SSE 推送阶段与最终结果
-    Web-->>User: 展示结论、证据与后续追问
-```
+### 📊 质量评测
+- 自建 50+ 题回归评测集（事实 / 概括 / 多跳 / 细节四类）：检索层 Hit@5 / MRR / 污染率，答案层 RAGAS（faithfulness / relevancy / context recall）
+- 独立 BENCH 账号隔离评测环境，每次检索/抽取算法变更后回归
 
 ## 技术栈
 
-| 层次 | 技术 | 用途 |
-| :--- | :--- | :--- |
-| Web | Vue 3、Vite、SSE、Marked | 上传、Agent 工作台、实时进度与安全 Markdown 展示 |
-| API | Java 21、Spring Boot 3.5.9、Undertow、MyBatis-Plus | 鉴权、媒体管理、任务编排与 REST API |
-| 异步与缓存 | RocketMQ 5.3.4、Redis 7.4、Redisson | 异步削峰、状态缓存、限流、锁与消费幂等 |
-| 数据与存储 | MySQL 8、MinIO、Qdrant | 业务数据、视频对象、Checkpoint 与向量检索 |
-| 视频与 AI | FFmpeg、Tesseract、LangChain4j、DeepSeek、TeleSpeechASR、BGE-M3 | 音视频处理、多模态解析、Agent 推理与 Embedding |
-| 部署 | Docker Compose | 本地中间件编排 |
+| 层次 | 技术 |
+| :--- | :--- |
+| Web | Vue 3、Vite、SSE、vis-network、Marked |
+| 编排 | Java 21、Spring Boot 3.5.9、MyBatis-Plus、RocketMQ、Redisson |
+| AI 计算 | Python、FastAPI、ffmpeg、Tesseract、DeepAgents（LangChain）、igraph/leidenalg |
+| 数据 | MySQL 8、Redis 7、Neo4j 5（图谱+向量）、MinIO（S3）、Qdrant（证据向量） |
+| 模型 | 阿里云百炼：qwen-plus（LLM）、qwen3.7-text-embedding、qwen3-omni-flash（ASR）、qwen3.7-text-rerank（OpenAI 兼容协议，可换任意供应商） |
 
 ## 本地运行
 
 ### 环境要求
 
-| 组件 | 要求 | 说明 |
-| :--- | :--- | :--- |
-| JDK | 21 | 后端运行环境 |
-| Node.js | 22 | Vue 与 Vite 构建环境 |
-| Docker | Compose v2 | 启动 MySQL、Redis、MinIO、Qdrant 与 RocketMQ |
-| FFmpeg | 可在终端调用 | 音频切分与关键帧抽取 |
-| Tesseract | 安装 `chi_sim` 与 `eng` | 中英文关键帧 OCR |
-| yt-dlp | 可选 | 仅解析在线视频链接时需要 |
+JDK 21 · Node.js 22 · Docker Compose v2 · FFmpeg · Tesseract（chi_sim + eng）· yt-dlp（可选）
 
-建议先确认命令均可用：
-
-```bash
-java -version
-node --version
-docker compose version
-ffmpeg -version
-tesseract --version
-```
-
-### 1. 准备配置
+### 1. 配置
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env`，至少替换数据库、Redis、MinIO、Qdrant 的示例密码并设置 `SILICONFLOW_API_KEY`。全新数据库中 `DB_USERNAME` 与 `MYSQL_APP_USER` 应保持一致；`MYSQL_ROOT_PASSWORD` 仅供数据库初始化使用。密钥只保存在本地 `.env`，不要提交到仓库。
+编辑 `.env`：数据库 / Redis / MinIO 密码 + 模型配置。默认走阿里云百炼（一个 key 通吃四项，也兼容 SiliconFlow 等任意 OpenAI 协议供应商）：
 
-默认 LLM 为 `deepseek-ai/DeepSeek-V3.2`。历史示例模型 `deepseek-ai/DeepSeek-R1-Distill-Qwen-32B` 已被硅基流动禁用，会返回 `Model disabled`。`LLM_TIMEOUT_SECONDS` 默认是 `300`，用于避免长视频证据分析在模型响应尚未返回时过早超时；模型或超时配置变更后需要重启后端。
+```bash
+LLM_API_KEY=sk-xxx
+LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+LLM_MODEL=qwen-plus
+EMBEDDING_API_KEY=sk-xxx
+EMBEDDING_MODEL=qwen3.7-text-embedding
+ASR_API_KEY=sk-xxx
+ASR_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+ASR_MODEL=qwen3-omni-flash
+RERANKER_API_KEY=sk-xxx
+RERANKER_BASE_URL=https://dashscope.aliyuncs.com/compatible-api/v1
+RERANKER_MODEL=qwen3.7-text-rerank
+RERANKER_PATH=/reranks
+```
 
 ### 2. 启动中间件
 
 ```bash
-./scripts/dev-up.sh
+./scripts/dev-up.sh        # MySQL / Redis / MinIO / RocketMQ / Qdrant
+docker start neo4j         # Neo4j 独立容器
 ```
 
-脚本会检查本机命令与版本、校验 Compose 配置，并等待 MySQL、Redis、MinIO、Qdrant 和 RocketMQ 启动。中间件与后端默认只监听 `127.0.0.1`，不会直接暴露到局域网；远程部署时再显式修改 `SERVER_ADDRESS` 并配置反向代理。
-
-### 3. 启动后端
+### 3. 启动应用
 
 ```bash
-set -a
-source .env
-set +a
-
-cd server
-./mvnw spring-boot:run
+./scripts/start-apps.sh    # Python(8000) + Java(9090) + 前端(5173)
 ```
 
-后端默认地址为 `http://localhost:9090`，启动时会初始化项目所需数据表。另开终端确认服务可用：
+浏览器访问 `http://localhost:5173`，注册账号后上传视频即可。前端构建状态、图谱可视化、问答均可用。
+
+### 常用命令
 
 ```bash
-curl http://localhost:9090/health
+# 只重启 Java / 单独服务
+./scripts/start-java.sh
+
+# Redis 调试（任务状态 / 模型运行时配置 / 锁）
+docker exec -it dovideo-ai-redis-1 redis-cli -a "$(grep '^REDIS_PASSWORD' .env | cut -d= -f2)" --no-auth-warning
+
+# 检索回归评测（需先 source .env）
+EVAL_GROUP_ID=user_4 EVAL_DATASET=ai-service/eval_dataset_bench.json python ai-service/eval_harness.py --save
 ```
-
-成功时返回 `{"code":0,"message":"success","data":"UP"}`。
-
-### 4. 启动前端
-
-```bash
-set -a
-source .env
-set +a
-
-cd client
-npm ci
-npm run dev
-```
-
-浏览器访问 `http://localhost:5173`。开发环境默认通过 Vite 代理访问后端；后端地址不同时修改 `VITE_DEV_PROXY_TARGET`，前后端分开部署时再设置 `VITE_API_BASE_URL`。
-
-只查看前端 Agent 工作台时，可以打开 `http://localhost:5173/?demo`。Demo 模式使用内置示例数据，不依赖后端服务。
-
-### 常见问题
-
-| 现象 | 处理方式 |
-| :--- | :--- |
-| 后端无法连接 MySQL 或 Redis | 运行 `docker compose --env-file .env ps`，确认服务健康且 `.env` 密码一致 |
-| 页面提示无法连接后端 | 先访问 `/health`；再检查 `VITE_DEV_PROXY_TARGET` 或 `VITE_API_BASE_URL` |
-| 视频解析提示命令不存在 | 确认 `ffmpeg`、`tesseract` 可在终端执行，必要时配置 `FFMPEG_DIR`、`OCR_COMMAND` |
-| AI 接口返回 401 或模型不可用 | 检查 `SILICONFLOW_API_KEY` 与模型名称，修改后重启后端 |
-| Maven 提示 `maven-default-http-blocker` | 在 `server` 目录执行 `./mvnw -s .mvn/central-settings.xml spring-boot:run`，临时绕过失效的用户级镜像 |
-
-停止本地中间件：
-
-```bash
-docker compose --env-file .env down
-```
-
-该命令不会删除 `mysql/data`、`redis/data`、`minio/data`、`qdrant/data` 或 RocketMQ 命名卷。需要完全重置时请先备份，再使用 `docker compose --env-file .env down --volumes` 并手动清理这些数据目录。
 
 ## 目录结构
 
 ```text
-DoVideoAI
-├── client/              # Vue 3 工作台
-├── server/              # Spring Boot API 与 Video Agent
-├── rocketmq/            # Broker 配置
-├── docker-compose.yml   # 中间件编排
-└── .env.example         # 本地配置模板
+DOVideo-AI
+├── client/              # Vue 3 前端（上传 / 视频库 / 问答 三 Tab）
+├── server/              # Java 编排层（状态机 / MQ / 代理 / 任务可靠性）
+├── ai-service/          # Python AI 计算层（解析 / 抽取 / 写图 / 检索 / Agent）
+│   ├── app/services/    #   核心：pipeline、两跳消歧、检索器、社区、Agent
+│   ├── eval_harness.py  #   检索层评测
+│   └── experiment/      #   实验与数据脚本
+├── docs/                # 设计与联调文档（kg-governance-impl-progress.md 为主）
+├── scripts/             # dev-up / start-apps / start-java
+└── docker-compose.yml
 ```
 
 ## License

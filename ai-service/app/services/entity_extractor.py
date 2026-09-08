@@ -6,6 +6,7 @@ import asyncio
 from typing import List
 from app.models.entity import SegmentExtraction, Entity, Relationship
 from app.clients.deepseek import DeepSeekClient
+from app.core.config import settings
 from app.core.logging import logger
 
 
@@ -43,6 +44,33 @@ class EntityExtractor:
                     # 解析结果
                     entities, relationships = self._parse_extraction_result(extraction_result)
                     logger.info(f"[ENTITY_EXTRACT] Segment {i+1} parsed: {len(entities)} entities, {len(relationships)} relationships")
+
+                    # gleaning 补抽（GraphRAG 式自查遗漏，默认 1 轮，KG_GLEANING_ROUNDS=0 关闭）
+                    for round_no in range(settings.kg_gleaning_rounds):
+                        glean_start = time.time()
+                        glean_result = await self.deepseek_client.extract_entities_gleaning(
+                            input_text, extraction_result)
+                        if '<|COMPLETE|>' in glean_result and '("' not in glean_result:
+                            logger.info(f"[ENTITY_EXTRACT] Segment {i+1} gleaning round{round_no+1}: no misses")
+                            break
+                        g_entities, g_relationships = self._parse_extraction_result(glean_result)
+                        # 去重：实体按规范化名字、关系按两端
+                        existing_names = {e.name.strip().lower() for e in entities}
+                        new_entities = [e for e in g_entities
+                                        if e.name.strip().lower() not in existing_names]
+                        existing_rels = {(r.source.strip().lower(), r.target.strip().lower())
+                                         for r in relationships}
+                        new_relationships = [r for r in g_relationships
+                                             if (r.source.strip().lower(), r.target.strip().lower())
+                                             not in existing_rels]
+                        entities.extend(new_entities)
+                        relationships.extend(new_relationships)
+                        extraction_result += '\n' + glean_result  # 下一轮 gleaning 的去重上下文
+                        logger.info(f"[ENTITY_EXTRACT] Segment {i+1} gleaning round{round_no+1}: "
+                                    f"+{len(new_entities)} entities, +{len(new_relationships)} relationships "
+                                    f"({(time.time()-glean_start)*1000:.0f}ms)")
+                        if not new_entities and not new_relationships:
+                            break
 
                     segment.entities = entities
                     segment.relationships = relationships

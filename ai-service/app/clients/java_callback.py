@@ -112,6 +112,16 @@ def classify_error(e: Exception) -> tuple[str, bool]:
         "ffprobe", "无法解析为有效视频", "视频内容校验失败",
         "corrupt",
     )
+    # 鉴权/计费类：402 欠费、401 未认证、403 无权限——重试无意义，先判永久
+    # （2026-09-02 实测：SiliconFlow 余额耗尽 402，analyze 重投空烧 attempt）
+    auth_markers = (
+        "402", "payment required", "insufficient", "balance",
+        "401", "unauthorized", "invalid api key", "incorrect api key",
+        "403", "forbidden", "authentication",
+    )
+    for marker in auth_markers:
+        if marker in text:
+            return ("PERMANENT_AUTH_" + marker.upper().replace(" ", "_")[:40], False)
     if isinstance(e, FileNotFoundError):
         return ("PERMANENT_FILENOTFOUND", False)
     for marker in permanent_markers:

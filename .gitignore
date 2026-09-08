@@ -31,3 +31,5 @@ server/target/
 logs/
 *.log
 ai-service/logs/
+.resume/
+ai-service/logs/

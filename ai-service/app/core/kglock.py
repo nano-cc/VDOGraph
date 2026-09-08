@@ -54,15 +54,20 @@ class KgLock:
         client = await _redis()
         waited = 0.0
         interval = 1.0
+        slow_logged = False
         while True:
             ok = await client.set(self.name, self.token, nx=True, px=self.ttl_ms)
             if ok:
                 self._watchdog_task = asyncio.create_task(self._watchdog())
-                logger.info(f"[LOCK] acquired {self.name} token={self.token[:8]}")
+                logger.info(f"[LOCK] acquired {self.name} token={self.token[:8]} waited={waited:.1f}s")
                 return True
             if waited >= self.wait_timeout_s:
                 logger.error(f"[LOCK] timeout waiting {self.name} after {waited:.0f}s")
                 return False
+            # 锁监控（#67）：等待超 30s 打一次警告（排查锁竞争/持锁方卡死）
+            if waited >= 30 and not slow_logged:
+                logger.warning(f"[LOCK] slow acquire: {self.name} waiting {waited:.0f}s（有别的任务持锁中）")
+                slow_logged = True
             await asyncio.sleep(interval)
             waited += interval
             interval = min(interval * 1.5, 10.0)  # 退避，封顶 10s
@@ -131,16 +136,21 @@ class KgMultiLock:
         client = await _redis()
         waited = 0.0
         interval = 0.5
+        slow_logged = False
         while True:
             acquired = await self._try_acquire_all(client)
             if acquired:
                 self._watchdog_task = asyncio.create_task(self._watchdog())
                 logger.info(f"[MULTILOCK] acquired {len(self.names)} locks, "
-                            f"first={self.names[0]} last={self.names[-1]}")
+                            f"first={self.names[0]} last={self.names[-1]} waited={waited:.1f}s")
                 return True
             if waited >= self.wait_timeout_s:
                 logger.error(f"[MULTILOCK] timeout after {waited:.0f}s, {len(self.names)} locks")
                 return False
+            # 锁监控（#67）：等待超 15s 打一次警告（细粒度锁本应秒级，慢=写集冲突或持锁方卡死）
+            if waited >= 15 and not slow_logged:
+                logger.warning(f"[MULTILOCK] slow acquire: {len(self.names)} locks waiting {waited:.0f}s")
+                slow_logged = True
             await asyncio.sleep(interval)
             waited += interval
             interval = min(interval * 1.5, 5.0)

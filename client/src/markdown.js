@@ -13,6 +13,7 @@ export function renderMarkdown(markdown) {
   if (cleanText.includes('</think>')) cleanText = cleanText.split('</think>').pop()
   if (!cleanText.trim()) cleanText = markdown
   cleanText = linkVideoTimestamps(cleanText)
+  cleanText = linkKgCitations(cleanText)
 
   const template = document.createElement('template')
   template.innerHTML = marked.parse(cleanText)
@@ -36,7 +37,7 @@ function sanitizeNode(node) {
   const href = node.getAttribute('href') || ''
   if (!/^(https?:|mailto:|\/|#)/i.test(href)) node.removeAttribute('href')
   node.setAttribute('rel', 'noopener noreferrer')
-  if (!href.startsWith('#video-t=')) node.setAttribute('target', '_blank')
+  if (!href.startsWith('#video-t=') && !href.startsWith('#video-cite=')) node.setAttribute('target', '_blank')
 }
 
 function linkVideoTimestamps(markdown) {
@@ -47,4 +48,14 @@ function linkVideoTimestamps(markdown) {
       : parts[0] * 60 + parts[1]
     return `[${timestamp}](#video-t=${seconds})`
   })
+}
+
+// #74：KG 问答内嵌引用锚点。〔媒体X mm:ss〕或〔媒体X mm:ss-mm:ss〕→ #video-cite=X:SS 链接
+// （LLM 两种格式都会产出，范围格式取起始时点匹配片段）
+function linkKgCitations(markdown) {
+  return markdown.replace(/〔媒体(\d+)\s+(\d{1,2}):(\d{2})(?:\s*-\s*(\d{1,2}):(\d{2}))?〕/g,
+    (match, mediaId, mm, ss) => {
+      const seconds = Number(mm) * 60 + Number(ss)
+      return `[${match}](#video-cite=${mediaId}:${seconds})`
+    })
 }

@@ -34,6 +34,11 @@ public class KgBuildTask {
 
     private Integer commitAttempt;
 
+    /** #79：失败重投预算（仅失败驱动的重投递增；analyzeAttempt 保留为 fencing 派发计数） */
+    private Integer analyzeRetry;
+
+    private Integer commitRetry;
+
     private String errorPhase;
 
     private String errorCode;

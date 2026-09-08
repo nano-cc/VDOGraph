@@ -30,6 +30,7 @@ class Community(BaseModel):
     relationships: List[CommunityRelationship] = Field(default_factory=list, description="关系列表")
     source_segments: List[str] = Field(default_factory=list, description="来源片段")
     summary: Optional[str] = Field(default=None, description="社区摘要")
+    findings: List[str] = Field(default_factory=list, description="关键发现列表（GraphRAG 式结构化要点）")
 
 
 class CommunityDetectRequest(BaseModel):

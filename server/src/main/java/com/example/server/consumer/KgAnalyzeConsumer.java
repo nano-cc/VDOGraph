@@ -79,7 +79,10 @@ public class KgAnalyzeConsumer implements RocketMQListener<KgAnalyzeMsg> {
         }
 
         try {
-            aiServiceClient.analyzeAsync(mediaId, msg.getVideoUrl(), msg.getAttempt(), msg.getUserId());
+            // #84：捎上真实上传时间（MySQL upload_time），Python 写入 Neo4j Media.uploaded_at
+            Long uploadTimeMs = media.getUploadTime() == null ? null
+                    : media.getUploadTime().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+            aiServiceClient.analyzeAsync(mediaId, msg.getVideoUrl(), msg.getAttempt(), msg.getUserId(), uploadTimeMs);
             log.info("kg_analyze_dispatched mediaId={} attempt={}", mediaId, msg.getAttempt());
         } catch (HttpClientErrorException.TooManyRequests e) {
             log.info("kg_analyze_busy_retry mediaId={}", mediaId);

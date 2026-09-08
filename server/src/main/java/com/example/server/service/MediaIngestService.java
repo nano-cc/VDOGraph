@@ -2,7 +2,6 @@ package com.example.server.service;
 
 import com.example.server.dto.UrlImportMsg;
 import com.example.server.entity.MediaFile;
-import com.example.server.utils.MinioUtils;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -24,49 +22,29 @@ public class MediaIngestService {
     private static final String URL_DEDUP_PREFIX = "url:import:dedup:";
     private static final Duration URL_DEDUP_TTL = Duration.ofHours(24);
 
-    private final MinioUtils minioUtils;
     private final MediaService mediaService;
-    private final KgBuildService kgBuildService;
-    private final com.example.server.service.MediaVisualsService mediaVisualsService;
     private final RocketMQTemplate rocketMQTemplate;
     private final StringRedisTemplate redisTemplate;
     private final UrlImportStatusService importStatusService;
     private final String urlImportTopic;
 
-    public MediaIngestService(MinioUtils minioUtils,
-                              MediaService mediaService,
-                              KgBuildService kgBuildService,
+    public MediaIngestService(MediaService mediaService,
                               RocketMQTemplate rocketMQTemplate,
                               StringRedisTemplate redisTemplate,
                               UrlImportStatusService importStatusService,
-                              com.example.server.service.MediaVisualsService mediaVisualsService,
                               @Value("${rocketmq.topic.url-import:url-import}") String urlImportTopic) {
-        this.minioUtils = minioUtils;
         this.mediaService = mediaService;
-        this.kgBuildService = kgBuildService;
-        this.mediaVisualsService = mediaVisualsService;
         this.rocketMQTemplate = rocketMQTemplate;
         this.redisTemplate = redisTemplate;
         this.importStatusService = importStatusService;
         this.urlImportTopic = urlImportTopic;
     }
 
-    public MediaFile ingestFile(MultipartFile file, Long userId) throws Exception {
-        if (file == null || file.isEmpty()) throw new IllegalArgumentException("上传文件不能为空");
-
-        String filename = mediaService.normalizeVideoFilename(file.getOriginalFilename());
-        String quickHash = mediaService.calculateQuickHash(file);
-        String fileUrl = minioUtils.uploadFile(file);
-        MediaFile mediaFile = mediaService.saveUploadedMedia(filename, fileUrl, userId, quickHash);
-        // 上传完成自动触发知识图谱构建（异步）
-        kgBuildService.triggerBuild(mediaFile.getId(), fileUrl, mediaFile.getUserId());
-        mediaVisualsService.enrich(mediaFile.getId(), fileUrl);
-        return mediaFile;
-    }
-
     /**
      * URL 视频导入（异步化：创建占位 + 发 MQ 即返回，下载/校验/判重在 UrlImportConsumer 执行）
      * 返回 PROCESSING 占位记录；前端按 /media/import-status 轮询推进
+     *
+     * #53：老 multipart 直传（ingestFile）已随老上传协议下线，手动上传统一走 S3 /media/v2/*
      */
     public MediaFile ingestUrl(String url, Long userId) {
         if (url == null || url.isBlank()) throw new IllegalArgumentException("视频链接不能为空");

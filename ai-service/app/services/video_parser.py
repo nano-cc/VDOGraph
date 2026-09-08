@@ -40,6 +40,11 @@ class VideoParser:
     SILENCE_MIN_DURATION_S = 0.4  # 静音最短持续（过滤正常换气）
     CUT_SILENCE = 'silence'
     CUT_HARD = 'hard'
+    # OCR 保留的常见英文缩写（全大写单串其余视为水印垃圾）
+    OCR_ASCII_WHITELIST = frozenset({
+        'AI','API','GPU','CPU','LLM','MCP','OCR','ASR','HTTP','HTTPS','URL','JSON','HTML','CSS',
+        'SQL','SDK','IDE','CLI','GUI','BERT','GPT','CUDA','Linux','PYTHON','JAVA','HTML5',
+    })
 
     def __init__(self):
         self.asr_client = AliyunAsrClient()
@@ -420,6 +425,30 @@ class VideoParser:
 
         return result
 
+    @staticmethod
+    def _is_useful_ocr(text) -> bool:
+        """OCR 垃圾串过滤（#B4）：幻灯片水印/随机字母（如 OEIAFMOOC）、纯单字符行不喂给抽取。
+        规则：有中文 → 留；纯 ASCII → 需含空格（成词组）且字母占比 <90% 防随机大写串；长度 <4 丢弃"""
+        if not text or not text.strip():
+            return False
+        t = text.strip()
+        if t in VideoParser.OCR_ASCII_WHITELIST:
+            return True
+        if len(t) < 4:
+            return False
+        import re as _re
+        if _re.search(r'[一-鿿]', t):
+            return True
+        # 纯 ASCII：
+        # ① 整行含"连续 6+ 个辅音字母"的随机串特征 → 丢
+        compact = t.replace(' ', '')
+        if _re.search(r'[BCDFGHJKLMNPQRSTVWXZbcdfghjklmnpqrstvwxz]{6,}', compact):
+            return False
+        # ② 全大写无空格串（≥4 字符）且不在常见缩写白名单 → 随机水印，丢
+        if ' ' not in t and t.isupper() and len(t) >= 4 and t not in VideoParser.OCR_ASCII_WHITELIST:
+            return False
+        return True
+
     def _merge(self, transcripts: List[dict], frames: List[dict], plans: List[dict]) -> List[VideoSegment]:
         """
         对齐 ASR 和 OCR（静音感知分片版）：
@@ -446,7 +475,7 @@ class VideoParser:
             assigned = False
             for seg in segments:
                 if seg['start_ms'] <= frame['timestamp_ms'] < seg['end_ms']:
-                    if frame['ocr_text'] and frame['ocr_text'].strip():
+                    if self._is_useful_ocr(frame.get('ocr_text')):
                         seg['ocr_texts'].append(frame['ocr_text'])
                     seg['evidence_frames'].append(frame['frame_url'])
                     assigned = True
@@ -454,7 +483,7 @@ class VideoParser:
             if not assigned and segments:
                 # 尾帧兜底：归最后一段
                 seg = segments[-1]
-                if frame['ocr_text'] and frame['ocr_text'].strip():
+                if self._is_useful_ocr(frame.get('ocr_text')):
                     seg['ocr_texts'].append(frame['ocr_text'])
                 seg['evidence_frames'].append(frame['frame_url'])
 

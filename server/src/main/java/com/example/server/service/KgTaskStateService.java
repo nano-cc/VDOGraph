@@ -159,31 +159,83 @@ public class KgTaskStateService {
     }
 
     // ==================== attempt 计数（条件自增，防多实例并发重投超发） ====================
+    // #79 双语义拆分：analyze_attempt = fencing token（每次派发递增，消息/心跳/预检用）；
+    // analyze_retry = 重试预算（仅失败驱动的重投递增，背压/队列等待不烧预算）
 
-    /** analyze 重投：QUEUED/ANALYZE_FAILED 时 analyze_attempt+1 并把状态归位 QUEUED */
+    /** analyze 失败重投（预算）：ANALYZE_FAILED 时 retry+1（预算校验）且 attempt+1（fencing），状态归位 QUEUED */
     public boolean prepareAnalyzeRedispatch(Long mediaId, int maxAttempts) {
         UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
         uw.eq("media_id", mediaId)
                 .in("status", QUEUED, ANALYZE_FAILED)
-                .apply("analyze_attempt < {0}", maxAttempts)
+                .apply("analyze_retry < {0}", maxAttempts)
                 .set("status", QUEUED)
                 .set("retryable", true)
+                .setSql("analyze_retry = analyze_retry + 1")
                 .setSql("analyze_attempt = analyze_attempt + 1")
                 .set("updated_at", LocalDateTime.now());
         return taskMapper.update(null, uw) > 0;
     }
 
-    /** commit 重投：ANALYZED/COMMIT_FAILED 时 commit_attempt+1 并把状态归位 ANALYZED */
+    /** analyze 队列补投（不烧预算）：QUEUED 超时（MQ 丢消息/背压积压），只加 fencing */
+    public boolean prepareAnalyzeQueueRedispatch(Long mediaId) {
+        UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
+        uw.eq("media_id", mediaId)
+                .eq("status", QUEUED)
+                .setSql("analyze_attempt = analyze_attempt + 1")
+                .set("updated_at", LocalDateTime.now());
+        return taskMapper.update(null, uw) > 0;
+    }
+
+    /** commit 失败重投（预算）：COMMIT_FAILED 时 retry+1（预算校验）且 attempt+1（fencing），状态归位 ANALYZED */
     public boolean prepareCommitRedispatch(Long mediaId, int maxAttempts) {
         UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
         uw.eq("media_id", mediaId)
                 .in("status", ANALYZED, COMMIT_FAILED)
-                .apply("commit_attempt < {0}", maxAttempts)
+                .apply("commit_retry < {0}", maxAttempts)
                 .set("status", ANALYZED)
                 .set("retryable", true)
+                .setSql("commit_retry = commit_retry + 1")
                 .setSql("commit_attempt = commit_attempt + 1")
                 .set("updated_at", LocalDateTime.now());
         return taskMapper.update(null, uw) > 0;
+    }
+
+    /** commit 队列补投（不烧预算）：ANALYZED 超时（回调后 commit 消息没接上），只加 fencing */
+    public boolean prepareCommitQueueRedispatch(Long mediaId) {
+        UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
+        uw.eq("media_id", mediaId)
+                .eq("status", ANALYZED)
+                .setSql("commit_attempt = commit_attempt + 1")
+                .set("updated_at", LocalDateTime.now());
+        return taskMapper.update(null, uw) > 0;
+    }
+
+    /** #77 手动重试：重置失败任务的预算与 fencing，回到待派发位（analyze 失败回 QUEUED，commit 失败回 ANALYZED） */
+    public boolean manualRetry(Long mediaId) {
+        KgBuildTask task = getTask(mediaId);
+        if (task == null) return false;
+        String status = task.getStatus();
+        if (ANALYZE_FAILED.equals(status)) {
+            UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
+            uw.eq("media_id", mediaId).eq("status", ANALYZE_FAILED)
+                    .set("status", QUEUED)
+                    .set("analyze_retry", 0)
+                    .set("retryable", true)
+                    .set("error_phase", null).set("error_code", null).set("error_message", null)
+                    .set("updated_at", LocalDateTime.now());
+            return taskMapper.update(null, uw) > 0;
+        }
+        if (COMMIT_FAILED.equals(status)) {
+            UpdateWrapper<KgBuildTask> uw = new UpdateWrapper<>();
+            uw.eq("media_id", mediaId).eq("status", COMMIT_FAILED)
+                    .set("status", ANALYZED)
+                    .set("commit_retry", 0)
+                    .set("retryable", true)
+                    .set("error_phase", null).set("error_code", null).set("error_message", null)
+                    .set("updated_at", LocalDateTime.now());
+            return taskMapper.update(null, uw) > 0;
+        }
+        return false;
     }
 
     /** 首次派发 analyze 计数（triggerBuild/consumer 前） */

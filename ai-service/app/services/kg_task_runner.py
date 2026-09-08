@@ -43,6 +43,42 @@ async def _set_task(media_id: int, **fields):
     await client.expire(key, TASK_TTL_S)
 
 
+# #78 条件写入 Lua：attempt 不匹配（我是旧执行体/僵尸）则拒绝写入并返回 -1。
+# key 不存在（TTL 过期）允许重建——Java watcher 的心跳归属校验以 MySQL attempt 为准，可识别。
+_COND_SET_LUA = """
+local cur = redis.call('HGET', KEYS[1], 'attempt')
+if cur and cur ~= ARGV[1] then return -1 end
+local n = #ARGV
+for i = 4, n, 2 do
+    redis.call('HSET', KEYS[1], ARGV[i], ARGV[i+1])
+end
+redis.call('HSET', KEYS[1], 'attempt', ARGV[1], 'updated_at', ARGV[2])
+redis.call('EXPIRE', KEYS[1], ARGV[3])
+return 1
+"""
+
+
+async def _set_task_if_owner(media_id: int, attempt: int, **fields) -> bool:
+    """#78 条件写入：仅当 Redis 中 attempt 归属当前执行体才写入；返回 False=我是僵尸"""
+    client = await _redis()
+    key = TASK_KEY_PREFIX + str(media_id)
+    args = [str(attempt), str(int(time.time())), str(TASK_TTL_S)]
+    for k, v in fields.items():
+        if v is not None:
+            args.extend([k, str(v)])
+    r = await client.eval(_COND_SET_LUA, 1, key, *args)
+    return r == 1
+
+
+def _abort_zombie(media_id: int, attempt: int, phase: str):
+    """#78 僵尸自我中止：心跳/进度发现 attempt 不匹配，取消自己的执行体任务"""
+    logger.warning(f"[TASK] media_id={media_id} zombie detected (attempt={attempt}, phase={phase}), self-aborting")
+    registry = _analyze_running if phase == "analyze" else _commit_running
+    task = registry.get(media_id)
+    if task is not None and not task.done():
+        task.cancel()
+
+
 async def get_task_state(media_id: int) -> Dict[str, str]:
     client = await _redis()
     return await client.hgetall(TASK_KEY_PREFIX + str(media_id))
@@ -190,12 +226,16 @@ def _release_slot(media_id: int, phase: str):
 MAX_CONCURRENT_COMMITS = 2
 
 
-async def _heartbeat_with_attempt(media_id: int, attempt: int):
-    """阶段心跳：刷 updated_at + attempt（watcher 校验心跳归属当前 attempt，防僵尸假心跳）"""
+async def _heartbeat_with_attempt(media_id: int, attempt: int, phase: str = "analyze"):
+    """阶段心跳：刷 updated_at + attempt（watcher 校验心跳归属当前 attempt，防僵尸假心跳）
+    #78：条件写入，发现自己是僵尸（attempt 不匹配）立即自我中止"""
     try:
         while True:
             await asyncio.sleep(HEARTBEAT_INTERVAL_S)
-            await _set_task(media_id, attempt=attempt)
+            ok = await _set_task_if_owner(media_id, attempt)
+            if not ok:
+                _abort_zombie(media_id, attempt, phase)
+                return
     except asyncio.CancelledError:
         pass
     except Exception as e:
@@ -220,8 +260,10 @@ def _precheck_fresh_running(state: Dict[str, str], running_status: str, attempt:
     return state_attempt in (-1, attempt)
 
 
-async def start_analyze(media_id: int, video_url: str, attempt: int = 1, user_id: int = None) -> str:
-    """投递 analyze 后台任务（解析+抽取，无锁并发）"""
+async def start_analyze(media_id: int, video_url: str, attempt: int = 1, user_id: int = None,
+                        upload_time_ms: int = None) -> str:
+    """投递 analyze 后台任务（解析+抽取，无锁并发）
+    upload_time_ms: #84 视频真实上传时间（毫秒戳），写入 Neo4j Media.uploaded_at"""
     # 同步占坑（先于任何 await）：防批量消息交错通过并发检查
     denied = _reserve_slot(_analyze_running, media_id, "analyze", MAX_CONCURRENT_BUILDS)
     if denied:
@@ -237,7 +279,7 @@ async def start_analyze(media_id: int, video_url: str, attempt: int = 1, user_id
     group_id = f"user_{user_id}"
     try:
         await _set_task(media_id, attempt=attempt, group_id=group_id, video_url=video_url)
-        task = asyncio.create_task(_run_analyze(media_id, video_url, attempt, group_id))
+        task = asyncio.create_task(_run_analyze(media_id, video_url, attempt, group_id, upload_time_ms))
         _fill_slot(media_id, "analyze", task, _analyze_running)
     except Exception:
         _release_slot(media_id, "analyze")
@@ -246,26 +288,33 @@ async def start_analyze(media_id: int, video_url: str, attempt: int = 1, user_id
     return QUEUED
 
 
-async def _run_analyze(media_id: int, video_url: str, attempt: int, group_id: str):
+async def _run_analyze(media_id: int, video_url: str, attempt: int, group_id: str,
+                       upload_time_ms: int = None):
     from app.services.video_processing_pipeline import VideoProcessingPipeline
     from app.clients import java_callback
 
-    heartbeat = asyncio.create_task(_heartbeat_with_attempt(media_id, attempt))
+    # trace_id（#67）：串联日志/Redis/回调，跨重启可溯源（a=analyze, c=commit）
+    trace_id = f"kg-{media_id}-a{attempt}"
+    t0 = time.time()
+    heartbeat = asyncio.create_task(_heartbeat_with_attempt(media_id, attempt, phase="analyze"))
     try:
         # 状态推进（Java 写 MySQL + 刷 Redis 快照）；409 = 任务已被取消/推进，中止
         await asyncio.to_thread(java_callback.transition_analyzing, media_id)
-        await _set_task(media_id, attempt=attempt)
+        await _set_task(media_id, attempt=attempt, trace_id=trace_id)
 
         pipeline = VideoProcessingPipeline()
 
         async def analyze_progress(done: int, total: int):
-            # 进度更新兼任心跳（_set_task 内部刷新 updated_at）
-            await _set_task(media_id, progress=f"{done}/{total}", message=f"片段抽取 {done}/{total}",
-                            attempt=attempt)
+            # 进度更新兼任心跳（条件写入刷新 updated_at）；#78 僵尸检出即中止
+            ok = await _set_task_if_owner(media_id, attempt, progress=f"{done}/{total}",
+                                          message=f"片段抽取 {done}/{total}")
+            if not ok:
+                _abort_zombie(media_id, attempt, "analyze")
 
         result = await pipeline.analyze(video_url, media_id, progress_cb=analyze_progress,
-                                        group_id=group_id)
-        stats = str(result.get('statistics') or '')
+                                        group_id=group_id, uploaded_at_ms=upload_time_ms)
+        # 阶段耗时打点（#67）：随 stats 落 MySQL kg_build_tasks.stats，可查询可聚合
+        stats = f"{result.get('statistics') or ''} | trace={trace_id} analyze_s={time.time()-t0:.1f}"
         logger.info(f"[TASK] media_id={media_id} analyze done: {stats}")
 
         # analyze 完成回调：Java 原子完成「MySQL → ANALYZED + 发 kg-commit」
@@ -312,12 +361,14 @@ async def _run_commit(media_id: int, attempt: int, group_id: str):
     from app.services.video_processing_pipeline import VideoProcessingPipeline
     from app.clients import java_callback
 
-    heartbeat = asyncio.create_task(_heartbeat_with_attempt(media_id, attempt))
+    trace_id = f"kg-{media_id}-c{attempt}"
+    t0 = time.time()
+    heartbeat = asyncio.create_task(_heartbeat_with_attempt(media_id, attempt, phase="commit"))
     try:
         # 先推进 COMMITTING 再等锁：等锁期间心跳照跳，watcher 不会误判
         await asyncio.to_thread(java_callback.transition_committing, media_id)
         # 清掉 analyze 阶段的残留进度（如 32/32），防止前端把旧进度误读为完成
-        await _set_task(media_id, attempt=attempt, progress="")
+        await _set_task(media_id, attempt=attempt, progress="", trace_id=trace_id)
 
         pipeline = VideoProcessingPipeline()
 
@@ -326,10 +377,13 @@ async def _run_commit(media_id: int, attempt: int, group_id: str):
             import re as _re
             m = _re.search(r'(\d+/\d+)\s*$', stage)
             if m:
-                await _set_task(media_id, message=f"图谱写入：{stage[:m.start()].strip()}",
-                                progress=m.group(1), attempt=attempt)
+                ok = await _set_task_if_owner(media_id, attempt,
+                                              message=f"图谱写入：{stage[:m.start()].strip()}",
+                                              progress=m.group(1))
             else:
-                await _set_task(media_id, message=f"图谱写入：{stage}", attempt=attempt)
+                ok = await _set_task_if_owner(media_id, attempt, message=f"图谱写入：{stage}")
+            if not ok:
+                _abort_zombie(media_id, attempt, "commit")
 
         if settings.kg_two_hop:
             # 两跳链路（#68）：prepare 锁外并行（LLM 全在这里），apply 细粒度实体锁（秒级）
@@ -342,7 +396,7 @@ async def _run_commit(media_id: int, attempt: int, group_id: str):
                 commit_result = await pipeline.commit(media_id, progress_cb=commit_progress,
                                                       group_id=group_id)
 
-        stats = str(commit_result.get('statistics') or '')
+        stats = f"{commit_result.get('statistics') or ''} | trace={trace_id} commit_s={time.time()-t0:.1f}"
         await asyncio.to_thread(java_callback.finished, media_id, stats)
         logger.info(f"[TASK] media_id={media_id} SUCCESS: {stats}")
 

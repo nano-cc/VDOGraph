@@ -36,6 +36,9 @@ public class KgTaskWatcher {
     private static final Logger log = LoggerFactory.getLogger(KgTaskWatcher.class);
 
     private static final int MAX_ATTEMPTS = 2;
+
+    /** #79 队列补投安全上限（距上次失败的补投次数）：防消费者全挂时每 5 分钟无限补投刷日志 */
+    private static final int MAX_QUEUE_REDISPATCH = 10;
     /** 无执行体状态（QUEUED/ANALYZED）停留超时：正常秒级推进，5min 没动说明衔接断了 */
     private static final long NO_EXECUTOR_STALE_MS = 5 * 60 * 1000;
     /** 有执行体状态（ANALYZING/COMMITTING）心跳停滞超时：心跳 30s 一次，30min 无更新判定死亡 */
@@ -162,23 +165,36 @@ public class KgTaskWatcher {
         return updatedAt <= 0 || now - updatedAt > HEARTBEAT_STALE_MS;
     }
 
-    /** 指数退避：15s × 2^(attempt-1)，避免固定 15s 打爆未恢复的下游 */
+    /** 指数退避：15s × 2^retry（#79 改用重试预算计数，派发次数不影响退避窗口），避免固定 15s 打爆未恢复的下游 */
     private boolean backoffElapsed(KgBuildTask task, long now) {
-        int attempt = ANALYZE_FAILED.equals(task.getStatus())
-                ? task.getAnalyzeAttempt() : task.getCommitAttempt();
-        long backoffMs = 15_000L * (1L << Math.max(0, Math.min(attempt, 6)));
+        Integer retry = ANALYZE_FAILED.equals(task.getStatus())
+                ? task.getAnalyzeRetry() : task.getCommitRetry();
+        int r = retry == null ? 0 : retry;
+        long backoffMs = 15_000L * (1L << Math.max(0, Math.min(r, 6)));
         long updatedMs = task.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         return now - updatedMs > backoffMs;
     }
 
     private void redispatchAnalyze(Long mediaId, KgBuildTask task, String reason) {
         if (!precheck(mediaId, reason)) return;
-        // 条件自增占位：并发 watcher/重复巡检只有一个能成功
-        if (!stateService.prepareAnalyzeRedispatch(mediaId, MAX_ATTEMPTS)) {
-            if (ANALYZE_FAILED.equals(task.getStatus())) {
-                log.error("KG analyze mediaId={} 已达重试上限，保持 FAILED 等人工", mediaId);
+        boolean queuedStale = QUEUED.equals(task.getStatus());
+        if (queuedStale) {
+            // #79 队列补投不烧预算，但设安全上限：距上次失败已补投 10 次还没人接，告警停投
+            int dispatchesSinceFailure = task.getAnalyzeAttempt() - (task.getAnalyzeRetry() == null ? 0 : task.getAnalyzeRetry());
+            if (dispatchesSinceFailure >= MAX_QUEUE_REDISPATCH) {
+                log.error("[ALERT] KG analyze mediaId={} 队列补投 {} 次仍无人消费，停投等人工（疑似消费者全挂）", mediaId, dispatchesSinceFailure);
+                return;
             }
-            return;
+            if (!stateService.prepareAnalyzeQueueRedispatch(mediaId)) return;
+        } else {
+            // 条件自增占位：并发 watcher/重复巡检只有一个能成功
+            if (!stateService.prepareAnalyzeRedispatch(mediaId, MAX_ATTEMPTS)) {
+                if (ANALYZE_FAILED.equals(task.getStatus())) {
+                    // [ALERT] 标记：告警渠道（日志采集/企业微信 webhook）按此前缀订阅
+                    log.error("[ALERT] KG analyze mediaId={} 已达重试上限（{}），保持 FAILED 等人工介入", mediaId, MAX_ATTEMPTS);
+                }
+                return;
+            }
         }
         KgBuildTask latest = stateService.getTask(mediaId);
         try {
@@ -192,11 +208,21 @@ public class KgTaskWatcher {
 
     private void redispatchCommit(Long mediaId, KgBuildTask task, String reason) {
         if (!precheck(mediaId, reason)) return;
-        if (!stateService.prepareCommitRedispatch(mediaId, MAX_ATTEMPTS)) {
-            if (COMMIT_FAILED.equals(task.getStatus())) {
-                log.error("KG commit mediaId={} 已达重试上限，保持 FAILED 等人工", mediaId);
+        boolean analyzedStale = ANALYZED.equals(task.getStatus());
+        if (analyzedStale) {
+            int dispatchesSinceFailure = task.getCommitAttempt() - (task.getCommitRetry() == null ? 0 : task.getCommitRetry());
+            if (dispatchesSinceFailure >= MAX_QUEUE_REDISPATCH) {
+                log.error("[ALERT] KG commit mediaId={} 队列补投 {} 次仍无人消费，停投等人工（疑似消费者全挂）", mediaId, dispatchesSinceFailure);
+                return;
             }
-            return;
+            if (!stateService.prepareCommitQueueRedispatch(mediaId)) return;
+        } else {
+            if (!stateService.prepareCommitRedispatch(mediaId, MAX_ATTEMPTS)) {
+                if (COMMIT_FAILED.equals(task.getStatus())) {
+                    log.error("[ALERT] KG commit mediaId={} 已达重试上限（{}），保持 FAILED 等人工介入", mediaId, MAX_ATTEMPTS);
+                }
+                return;
+            }
         }
         KgBuildTask latest = stateService.getTask(mediaId);
         try {

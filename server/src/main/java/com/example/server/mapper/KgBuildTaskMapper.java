@@ -24,4 +24,8 @@ public interface KgBuildTaskMapper extends BaseMapper<KgBuildTask> {
         public Long userId;
         public String filePath;
     }
+
+    /** #83：有 KG 任务的全部 group_id（定期全量社区重建的触发名单） */
+    @Select("SELECT DISTINCT group_id FROM kg_build_tasks WHERE group_id IS NOT NULL")
+    List<String> selectDistinctGroupIds();
 }

@@ -53,30 +53,32 @@ class RuntimeConfig:
             logger.warning(f"[RUNTIME_CONFIG] Redis read failed, use cached/default: {e}")
 
     def _default(self, kind: str) -> Dict[str, str]:
-        """.env 默认值兜底"""
+        """.env 默认值兜底（分服务 key 优先，留空回退 siliconflow 统一 key）"""
+        sf_key, sf_url = settings.siliconflow_api_key, settings.siliconflow_base_url
         if kind == 'llm':
             return {
-                'base_url': settings.deepseek_base_url,
-                'api_key': settings.deepseek_api_key,
+                'base_url': settings.llm_base_url or settings.deepseek_base_url,
+                'api_key': settings.llm_api_key or sf_key,
                 'model': settings.deepseek_model
             }
         if kind == 'embedding':
             return {
-                'base_url': settings.siliconflow_base_url,
-                'api_key': settings.siliconflow_api_key,
+                'base_url': settings.embedding_base_url or sf_url,
+                'api_key': settings.embedding_api_key or sf_key,
                 'model': settings.embedding_model
             }
         if kind == 'asr':
             return {
                 'base_url': settings.ai_asr_url,
-                'api_key': settings.siliconflow_api_key,
+                'api_key': settings.asr_api_key or sf_key,
                 'model': settings.ai_asr_model
             }
         if kind == 'reranker':
             return {
-                'base_url': settings.siliconflow_base_url,
-                'api_key': settings.siliconflow_api_key,
-                'model': 'BAAI/bge-reranker-v2-m3'
+                'base_url': settings.reranker_base_url or sf_url,
+                'api_key': settings.reranker_api_key or sf_key,
+                'model': settings.reranker_model,
+                'path': settings.reranker_path,
             }
         raise ValueError(f"Unknown config kind: {kind}")
 

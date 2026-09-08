@@ -20,6 +20,12 @@ from app.core.logging import logger
 
 
 class VideoProcessingPipeline:
+    # #84 视频级总结：≤2 万字单次 LLM 直过；超过走 L1 分块要点 → L2 聚合（保险丝）
+    SUMMARY_SINGLE_CHARS = 20000
+    SUMMARY_CHUNK_CHARS = 6000
+    SUMMARY_TARGET_RANGE = "150-400 字"
+    SUMMARY_MIN_EFFECTIVE_CHARS = 300  # 剥掉（音乐）（鼓声）等标记后的有效文本下限，低于则不生成（防脑补）
+
     def __init__(self):
         self.video_parser = VideoParser()
         self.entity_extractor = EntityExtractor()
@@ -30,14 +36,94 @@ class VideoProcessingPipeline:
         self.embedding_client = EmbeddingClient()
         self.deepseek_client = DeepSeekClient()
 
+    @staticmethod
+    def _mmss(ms: int) -> str:
+        s = (ms or 0) // 1000
+        return f"{s // 60:02d}:{s % 60:02d}"
+
+    _SUMMARY_PROMPT = """请为下面这个视频写一段{target}的中文内容简介（叙述性一段话，不是要点罗列）：
+- 说清视频的主线脉络（按什么思路/顺序展开）
+- 涵盖的主要主题、关键实体（人物/概念/产品等）
+- 值得注意的观点或结论
+- 片段标注的时间（[mm:ss]）只是时间线参考，不要写进总结里
+- 只依据转写文本中真实存在的内容，内容少就如实少写，禁止脑补延伸
+
+视频分段转写：
+{text}
+
+只输出简介正文，不要任何前缀或解释。"""
+
+    _CHUNK_PROMPT = """下面是某个视频其中一段区间（{range_}）的转写。请提取这段的要点：主要话题、关键实体（人物/概念/产品/事件）、重要结论或转折，各用一句话，压缩到 200 字以内。只输出要点本身。
+
+区间转写：
+{text}"""
+
+    async def generate_video_summary(self, media_id: int, segments) -> str | None:
+        """
+        #84 生成整视频内容总结。幂等：Media.summary 已存在直接返回（跳过 LLM）。
+        超长（>2 万字）走 L1 分块要点（并发）→ L2 聚合；否则单次 LLM。
+        失败返回 None（调用方降级跳过）。
+        """
+        # 幂等：已生成过直接复用
+        existing = self.neo4j_client.get_media_summary(media_id)
+        if existing:
+            logger.info(f"[ANALYZE] media {media_id} summary 已存在，跳过生成")
+            return existing
+
+        lines = [f"[{self._mmss(s.start_ms)}] {s.transcript or ''}" for s in segments]
+        full_text = "\n".join(l for l in lines if l.strip())
+        if not full_text.strip():
+            return None
+
+        # 有效文本量：剥掉 ASR 非语音标记（（音乐）（鼓声）（掌声）等）再衡量，纯音乐视频不脑补总结
+        import re as _re
+        effective = _re.sub(r'[（(【\[][^）)\]】]{0,8}[）)\]】]', '', full_text)
+        if len(effective.strip()) < self.SUMMARY_MIN_EFFECTIVE_CHARS:
+            logger.info(f"[ANALYZE] media {media_id} 有效文本过少（{len(effective.strip())} 字符），跳过总结生成")
+            return None
+
+        total_chars = len(full_text)
+        if total_chars <= self.SUMMARY_SINGLE_CHARS:
+            logger.info(f"[ANALYZE] media {media_id} 总结单次生成（{total_chars} 字符）")
+            return await self._llm_summary(full_text)
+
+        # L1 分块要点
+        logger.info(f"[ANALYZE] media {media_id} 超长（{total_chars} 字符），分层压缩")
+        chunks, cur, cur_start = [], [], 0
+        for s in segments:
+            line = f"[{self._mmss(s.start_ms)}] {s.transcript or ''}"
+            if cur and sum(len(l) for l in cur) + len(line) > self.SUMMARY_CHUNK_CHARS:
+                chunks.append(cur)
+                cur, cur_start = [], s.start_ms
+            cur.append(line)
+        if cur:
+            chunks.append(cur)
+
+        async def chunk_points(chunk_lines):
+            range_ = f"{chunk_lines[0].split(']')[0][1:]} - {chunk_lines[-1].split(']')[0][1:]}"
+            return await self.deepseek_client.acall_llm(
+                self._CHUNK_PROMPT.format(range_=range_, text="\n".join(chunk_lines)))
+
+        points = await asyncio.gather(*[chunk_points(c) for c in chunks])
+        merged = "\n".join(p for p in points if p)
+        logger.info(f"[ANALYZE] media {media_id} L1 出 {len(chunks)} 块要点（{len(merged)} 字符），L2 聚合")
+        return await self._llm_summary(merged)
+
+    async def _llm_summary(self, text: str) -> str | None:
+        out = await self.deepseek_client.acall_llm(
+            self._SUMMARY_PROMPT.format(target=self.SUMMARY_TARGET_RANGE, text=text))
+        out = (out or "").strip()
+        return out if out else None
+
     # ==================== 阶段一：analyze（无锁并发） ====================
 
     async def analyze(self, video_path: str, media_id: int, user_goal: str = "", force: bool = False,
-                      progress_cb=None, group_id: str = None) -> Dict:
+                      progress_cb=None, group_id: str = None, uploaded_at_ms: int = None) -> Dict:
         """
         解析 + 抽取（幂等：已解析/已抽取的部分直接跳过）
         progress_cb: 可选协程回调 (done, total)，逐片段抽取完成时上报进度
         group_id: 用户隔离标识（三期），Media/Segment 节点落 group_id 属性
+        uploaded_at_ms: #84 视频真实上传时间（毫秒戳），写入 Media.uploaded_at
         """
         self.group_id = group_id
         start_time = time.time()
@@ -90,7 +176,7 @@ class VideoProcessingPipeline:
                 video_context = await self.video_parser.parse(actual_path, user_goal, media_id=media_id)
                 video_context.source = video_path
                 # 解析完立即保存 Media + Segment（断点续跑基础）
-                await self._save_media_and_segments(video_context, media_id)
+                await self._save_media_and_segments(video_context, media_id, uploaded_at_ms=uploaded_at_ms)
 
             # 2. 实体关系抽取（并发，逐片段幂等跳过 + 落库）
             from app.models.entity import SegmentExtraction
@@ -145,10 +231,31 @@ class VideoProcessingPipeline:
                     logger.warning(f"[ANALYZE] {failed} segments failed extraction (not cached, will retry on next run)")
 
             total_duration = (time.time() - start_time) * 1000
+
+            # #84 上传时间回填（缓存命中分支不走 _save_media_and_segments，这里兜底；首写为准）
+            if uploaded_at_ms:
+                try:
+                    self.neo4j_client.set_media_uploaded_at(media_id, uploaded_at_ms)
+                except Exception as e:
+                    logger.warning(f"[ANALYZE] media {media_id} uploaded_at 回填失败: {e}")
+
+            # #84 视频级内容总结：写入 Media.summary + summary_embedding（失败降级不阻塞 analyze）
+            summary_written = False
+            try:
+                video_summary = await self.generate_video_summary(media_id, video_context.segments)
+                if video_summary:
+                    summary_emb = await self.embedding_client.embed(video_summary)
+                    self.neo4j_client.update_media_summary(media_id, video_summary, summary_emb)
+                    summary_written = True
+                    logger.info(f"[ANALYZE] media {media_id} video summary: {len(video_summary)} chars")
+            except Exception as e:
+                logger.warning(f"[ANALYZE] media {media_id} summary failed (降级跳过): {e}")
+
             stats = {
                 'segments': len(video_context.segments),
                 'extracted_now': len(to_extract),
-                'extraction_cached': len(raw_extraction_cache)
+                'extraction_cached': len(raw_extraction_cache),
+                'summary': summary_written,
             }
             logger.info(f"[ANALYZE] Completed: {stats}, {total_duration:.2f}ms")
             return {'status': 'success', 'media_id': media_id, 'statistics': stats, 'duration_ms': total_duration}
@@ -547,8 +654,9 @@ class VideoProcessingPipeline:
 
     # ==================== 内部方法 ====================
 
-    async def _save_media_and_segments(self, video_context, media_id):
-        """保存视频节点和片段（解析完成后立即调用，批量 embedding）"""
+    async def _save_media_and_segments(self, video_context, media_id, uploaded_at_ms: int = None):
+        """保存视频节点和片段（解析完成后立即调用，批量 embedding）
+        uploaded_at_ms: #84 视频真实上传时间（MySQL upload_time 捎带），写入 Media.uploaded_at"""
         import os
 
         media_node_id = f"media_{media_id}"
@@ -562,7 +670,8 @@ class VideoProcessingPipeline:
             'title': title,
             'path': video_context.source,
             'duration_ms': duration_ms,
-            'title_embedding': title_embedding
+            'title_embedding': title_embedding,
+            'uploaded_at': uploaded_at_ms,
         })
 
         # 批量 embedding：所有片段的 transcript + ocr 一次批量
